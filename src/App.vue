@@ -171,7 +171,7 @@ export default app;
           class="text-3xl font-bold mb-4 w-full"
           style="color: var(--color-primary)"
         >
-          # {{ res.route?.route }} - {{ res.route?.dest_en }}<br />
+          # {{ res.route?.route }} // {{ res.route?.dest_en }}<br />
           @ {{ res.busStop?.name_en }}
         </h1>
         <div
