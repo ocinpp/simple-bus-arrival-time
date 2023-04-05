@@ -1,76 +1,6 @@
 <script>
 import _ from "lodash";
-import moment from "moment";
-
-// extract bus number at start so that the suffix is removed
-function extractNumber(route) {
-  const num = route.replace(/[^0-9]/g, "");
-  return parseInt(num != null ? num : route);
-}
-
-async function getRoute(route, dir, serviceType) {
-  let res = null;
-  try {
-    const response = await fetch(
-      `https://data.etabus.gov.hk/v1/transport/kmb/route/${route}/${dir}/${serviceType}`
-    );
-    const data = await response.json();
-    console.log(data["generated_timestamp"]);
-    res = data.data;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-  return res;
-}
-
-async function getStop(busStop) {
-  let res = null;
-  try {
-    const response = await fetch(
-      `https://data.etabus.gov.hk/v1/transport/kmb/stop/${busStop}`
-    );
-    const data = await response.json();
-    console.log(data["generated_timestamp"]);
-    res = data.data;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-  return res;
-}
-
-async function getEtas(company, busStop, route, dir, lang) {
-  let res = [];
-  try {
-    const response = await fetch(
-      `https://data.etabus.gov.hk/v1/transport/kmb/stop-eta/${busStop}`
-    );
-    const data = await response.json();
-    console.log(data["generated_timestamp"]);
-    res = data.data;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-  return res.filter(
-    (o) => o.route === route && dir.toUpperCase().startsWith(o.dir)
-  );
-}
-
-async function getEtaDisplay(company, busStop, route, dir, lang) {
-  const etas = await getEtas(company, busStop, route, dir, lang);
-  for (const eta of etas) {
-    // format the eta time
-    if (eta.eta != "") {
-      eta.etaStr = moment(eta.eta).format("H:mm:ss");
-      const minutesDiff = moment(eta.eta).diff(moment(), "m");
-      eta.fromNow = minutesDiff > 1 ? minutesDiff + " mins" : "less than 1 min";
-    }
-  }
-
-  return etas;
-}
+import { extractNumber, getRoute, getStop, getEtaDisplay } from "./util";
 
 const app = {
   data() {
@@ -80,7 +10,7 @@ const app = {
       res: { route: null, busStop: null, etas: [] },
       lang: "zh-hant",
       check: {
-        company: ["KMB"],
+        company: "KMB",
         // busStop: "F63C76EC97E38A91",
         // route: "8",
         // dir: "outbound",
@@ -106,7 +36,7 @@ const app = {
   },
   methods: {
     async getRouteBusStopEta(company, busStop, route, dir, lang) {
-      const stopObj = await getStop(busStop);
+      const stopObj = await getStop(company, busStop);
       const etasObj = await getEtaDisplay(company, busStop, route, dir, lang);
       return {
         stop: stopObj,
@@ -114,24 +44,23 @@ const app = {
       };
     },
     async updateAll() {
-      let allEtas = [];
+      const allEtas = [];
       this.now = new Date().toLocaleTimeString();
       this.isLoading = true;
 
-      for (const company of this.check.company) {
-        try {
-          const obj = await this.getRouteBusStopEta(
-            company,
-            this.check.busStop,
-            this.check.route,
-            this.check.dir,
-            this.lang
-          );
-          allEtas.push(...obj.etas);
-        } catch (error) {
-          console.log(error);
-        }
+      try {
+        const obj = await this.getRouteBusStopEta(
+          this.check.company,
+          this.check.busStop,
+          this.check.route,
+          this.check.dir,
+          this.lang
+        );
+        allEtas.push(...obj.etas);
+      } catch (error) {
+        console.log(error);
       }
+
       // sort by route
       this.res.etas = _.sortBy(allEtas, [
         function (e) {
@@ -146,11 +75,12 @@ const app = {
   },
   created: async function () {
     this.res.route = await getRoute(
+      this.check.company,
       this.check.route,
       this.check.dir,
       this.check.serviceType
     );
-    this.res.busStop = await getStop(this.check.busStop);
+    this.res.busStop = await getStop(this.check.company, this.check.busStop);
   },
   mounted: async function () {
     await this.updateAll();
