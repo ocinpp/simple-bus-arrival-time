@@ -1,5 +1,9 @@
 # Simple Bus Arrival Time
 
+## Data Source
+
+### Kowloon Motor Bus and Long Win Bus Services
+
 The project makes use of 3 APIs from [Real time Arrival Data of Kowloon Motor Bus and Long Win Bus Services](https://data.gov.hk/en-data/dataset/hk-td-tis_21-etakmb) to get the estimated arrival time for a specific bus route at a particular bus stop.
 
 - [Route-Stop Data](https://data.gov.hk/en-data/dataset/hk-td-tis_21-etakmb/resource/9fc22f3a-5eae-4df8-9346-ba3e32a4f90d)
@@ -8,9 +12,19 @@ The project makes use of 3 APIs from [Real time Arrival Data of Kowloon Motor Bu
 
 You can get all bus stops using [Stop List Data](https://data.etabus.gov.hk/v1/transport/kmb/stop)
 
+### New Lantao Bus Company (1973) Limited
+
+The project makes use of 2 APIs from [Bus service of New Lantao Bus Company (1973) Limited (Second generation)](https://data.gov.hk/en-data/dataset/nlb-bus-nlb-bus-service-v2
+) to get the estimated arrival time for a specific bus route at a particular bus stop.
+
+- [Get list of all routes](https://www.nlb.com.hk/datagovhk/BusServiceOpenAPIDocumentation2.0.pdf)
+- [Get estimated arrivals of a stop of a route](https://www.nlb.com.hk/datagovhk/BusServiceOpenAPIDocumentation2.0.pdf)
+
+It also makes use of a static js file (`nlb.js`) that contains all the bus stops.
+
 ## Build Setup
 
-```
+```shell
 # install dependencies
 $ npm install
 
@@ -35,7 +49,7 @@ For Vue 3, this project will be using **Options API**.
 ## Tailwind CSS
 
 This project is using Tailwind CSS for styling.
+
 ### Recommended Setup
 
 - [https://tailwindcss.com/docs/guides/vite](https://tailwindcss.com/docs/guides/vite)
-
