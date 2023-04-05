@@ -2,10 +2,6 @@
 import _ from "lodash";
 import moment from "moment";
 
-// https://data.gov.hk/en-data/dataset/ctb-eta-transport-realtime-eta
-// https://data.gov.hk/en-data/dataset/nwfb-eta-transport-realtime-eta
-// https://data.gov.hk/en-data/dataset/hk-ogcio-st_div_04-transport-bus-route-list-and-eta-spcific-bus-stop
-
 // extract bus number at start so that the suffix is removed
 function extractNumber(route) {
   const num = route.replace(/[^0-9]/g, "");
@@ -67,9 +63,9 @@ async function getEtaDisplay(company, busStop, route, dir, lang) {
   for (const eta of etas) {
     // format the eta time
     if (eta.eta != "") {
-      eta.etaStr = moment(eta.eta).format("H:mm");
+      eta.etaStr = moment(eta.eta).format("H:mm:ss");
       const minutesDiff = moment(eta.eta).diff(moment(), "m");
-      eta.fromNow = (minutesDiff > 0 ? minutesDiff : 0) + " mins";
+      eta.fromNow = minutesDiff > 1 ? minutesDiff + " mins" : "less than 1 min";
     }
   }
 
@@ -175,29 +171,45 @@ export default app;
           class="text-3xl font-bold mb-4 w-full"
           style="color: var(--color-primary)"
         >
-          # {{ res?.route?.route }} - {{ res?.route?.dest_en }}<br />
-          @ {{ res?.busStop?.name_en }}
+          # {{ res.route?.route }} - {{ res.route?.dest_en }}<br />
+          @ {{ res.busStop?.name_en }}
         </h1>
         <div
           class="flex flex-col md:flex-row md:justify-center md:items-center w-full"
         >
-          <template v-bind:key="index" v-for="(eta, index) in res?.etas">
+          <template v-if="res.etas && res.etas.length > 0">
+            <template v-bind:key="index" v-for="(eta, index) in res.etas">
+              <div
+                class="flex flex-col items-center justify-center bg-[var(--color-accent)] p-4 rounded-lg md:mr-4 arrival-time"
+                :class="widthVariants[res.etas.length]"
+              >
+                <div class="flex flex-col items-center justify-center h-full">
+                  <div
+                    class="text-6xl font-bold mb-2"
+                    style="color: var(--color-text)"
+                  >
+                    {{ eta.etaStr }}
+                  </div>
+                  <div
+                    class="text-lg font-medium"
+                    style="color: var(--color-text)"
+                  >
+                    Arriving in {{ eta.fromNow }}
+                  </div>
+                </div>
+              </div>
+            </template>
+          </template>
+          <template v-else>
             <div
-              class="flex flex-col items-center justify-center bg-[var(--color-accent)] p-4 rounded-lg md:mr-4 arrival-time"
-              :class="widthVariants[res.etas.length]"
+              class="flex flex-col items-center justify-center bg-[var(--color-accent)] p-4 rounded-lg md:mr-4 arrival-time w-full"
             >
               <div class="flex flex-col items-center justify-center h-full">
-                <div
-                  class="text-6xl font-bold mb-2"
-                  style="color: var(--color-text)"
-                >
-                  {{ eta.etaStr }}
-                </div>
                 <div
                   class="text-lg font-medium"
                   style="color: var(--color-text)"
                 >
-                  Arriving in {{ eta.fromNow }}
+                  No scheduled arrival
                 </div>
               </div>
             </div>
