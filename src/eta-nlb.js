@@ -6,11 +6,13 @@ const etaNlb = {
     let res = null;
 
     // get API URL
-    const url = `https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list&routeId=${route}`;
+    const url = `https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list`;
 
     try {
       const response = await fetch(url);
       const data = await response.json();
+
+      // filter from a full list of routes
       const routeInfo = data.routes.find((r) => r.routeId === route);
 
       if (routeInfo === null) {
