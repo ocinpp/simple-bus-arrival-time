@@ -1,6 +1,6 @@
 <script>
 import _ from "lodash";
-import { extractNumber, getRoute, getStop, getEtaDisplay } from "./util";
+import { extractNumber, getEtaByCompany } from "./eta";
 
 const app = {
   data() {
@@ -8,19 +8,21 @@ const app = {
       now: new Date().toLocaleString(),
       isLoading: false,
       res: { route: null, busStop: null, etas: [] },
-      lang: "zh-hant",
+      lang: "en",
       check: {
         company: "KMB",
-        // busStop: "F63C76EC97E38A91",
-        // route: "8",
-        // dir: "outbound",
         busStop: "31072508CEF942C6",
         route: "281A",
         dir: "inbound",
         serviceType: "1",
+        // company: "NLB",
+        // busStop: "13",
+        // route: "7",
+        // dir: "inbound",
+        // serviceType: "1",
       },
       widthVariants: {
-        1: "md:w-1/1",
+        1: "md:w-full",
         2: "md:w-1/2",
         3: "md:w-1/3",
         4: "md:w-1/4",
@@ -29,15 +31,15 @@ const app = {
       },
     };
   },
-  computed: {
-    widthClass() {
-      return `md:w-1/${this.res.etas.length}`;
-    },
-  },
   methods: {
     async getRouteBusStopEta(company, busStop, route, dir, lang) {
-      const stopObj = await getStop(company, busStop);
-      const etasObj = await getEtaDisplay(company, busStop, route, dir, lang);
+      const stopObj = await getEtaByCompany(company).getStop(busStop);
+      const etasObj = await getEtaByCompany(company).getEtaDisplay(
+        busStop,
+        route,
+        dir,
+        lang
+      );
       return {
         stop: stopObj,
         etas: etasObj,
@@ -74,13 +76,14 @@ const app = {
     },
   },
   created: async function () {
-    this.res.route = await getRoute(
-      this.check.company,
+    this.res.route = await getEtaByCompany(this.check.company).getRoute(
       this.check.route,
       this.check.dir,
       this.check.serviceType
     );
-    this.res.busStop = await getStop(this.check.company, this.check.busStop);
+    this.res.busStop = await getEtaByCompany(this.check.company).getStop(
+      this.check.busStop
+    );
   },
   mounted: async function () {
     await this.updateAll();
@@ -101,8 +104,10 @@ export default app;
           class="text-3xl font-bold mb-4 w-full"
           style="color: var(--color-primary)"
         >
-          # {{ res.route?.route }} // {{ res.route?.dest_en }}<br />
-          @ {{ res.busStop?.name_en }}
+          @ {{ res.busStop?.name_en }} <br />
+          <br />
+          # {{ res.route?.route }} <br />
+          // {{ res.route?.orig_en }} >> {{ res.route?.dest_en }}
         </h1>
         <div
           class="flex flex-col md:flex-row md:justify-center md:items-center w-full"
@@ -139,7 +144,7 @@ export default app;
                   class="text-lg font-medium"
                   style="color: var(--color-text)"
                 >
-                  No scheduled arrival
+                  No scheduled arrival at this bus stop.
                 </div>
               </div>
             </div>
