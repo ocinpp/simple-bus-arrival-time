@@ -3,11 +3,49 @@ import { NLB_STOPS } from "./nlb";
 
 const etaNlb = {
   async getRoutes() {
-    return [];
+    let res = null;
+
+    // get API URL
+    const url = `https://rt.data.gov.hk/v2/transport/nlb/route.php?action=list`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      // filter from a full list of routes
+      res = data.routes.map((routeInfo) => {
+        return {
+          routeId: routeInfo.routeId,
+          route: routeInfo.routeNo,
+          bound: "",
+          service_type: "",
+          orig_en: routeInfo.routeName_e.split(">")[0]?.trim(),
+          orig_tc: routeInfo.routeName_c.split(">")[0]?.trim(),
+          orig_sc: routeInfo.routeName_s.split(">")[0]?.trim(),
+          dest_en: routeInfo.routeName_e.split(">")[1]?.trim(),
+          dest_tc: routeInfo.routeName_c.split(">")[1]?.trim(),
+          dest_sc: routeInfo.routeName_s.split(">")[1]?.trim(),
+        };
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+
+    return res;
   },
 
   async getStops() {
-    return [];
+    return NLB_STOPS.map((stop) => {
+      return {
+        stop: stop.stopId,
+        name_en: stop.stopName_e,
+        name_tc: stop.stopName_c,
+        name_sc: stop.stopName_s,
+        lat: stop.latitude,
+        long: stop.longitude,
+      };
+    });
   },
 
   async getRoute(route, dir, serviceType) {
@@ -31,6 +69,7 @@ const etaNlb = {
       // KMB: {"route":"1","bound":"I","service_type":"1","orig_en":"STAR FERRY","orig_tc":"尖沙咀碼頭","orig_sc":"尖沙咀码头","dest_en":"CHUK YUEN ESTATE","dest_tc":"竹園邨","dest_sc":"竹园邨"}
 
       res = {
+        routeId: routeInfo.routeId,
         route: routeInfo.routeNo,
         bound: "",
         service_type: "",
@@ -45,6 +84,7 @@ const etaNlb = {
       console.error(error);
       throw error;
     }
+
     return res;
   },
 
@@ -69,8 +109,35 @@ const etaNlb = {
     }
   },
 
-  async getRouteStops() {
-    return [];
+  async getRouteStops(route, dir, serviceType) {
+    let res = null;
+
+    // get API URL
+    const url = `https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=list&routeId=${route}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      // convert data to KMB style
+      res = data.stops.map((stop, index) => {
+        return {
+          stop: stop.stopId,
+          route: stop.route,
+          bound: "",
+          service_type: "",
+          seq: index,
+          name_en: stop.stopName_e.split(">")[0]?.trim(),
+          name_tc: stop.stopName_c.split(">")[0]?.trim(),
+          name_sc: stop.stopName_s.split(">")[0]?.trim(),
+        };
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+
+    return res;
   },
 
   async getEtas(busStop, route, dir, serviceType, lang) {
