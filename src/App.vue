@@ -1,6 +1,6 @@
 <script>
 import _ from "lodash";
-import { extractNumber, getEtaByCompany } from "./eta";
+import { extractNumber, getEtaByCompany, readSettingsFromStorage } from "./eta";
 import StationSettings from "./components/StationSettings.vue";
 
 const app = {
@@ -14,11 +14,16 @@ const app = {
       res: { route: null, busStop: null, etas: [] },
       lang: "en",
       check: {
-        company: "KMB",
-        busStop: "31072508CEF942C6",
-        route: "281A",
-        dir: "inbound",
-        serviceType: "1",
+        company: "",
+        busStop: "",
+        route: "",
+        dir: "",
+        serviceType: "",
+        // company: "KMB",
+        // busStop: "31072508CEF942C6",
+        // route: "281A",
+        // dir: "inbound",
+        // serviceType: "1",
         // company: "NLB",
         // busStop: "13",
         // route: "7",
@@ -36,10 +41,23 @@ const app = {
     };
   },
   methods: {
-    async updateSetting(setting) {
+    getSettingsFromStorage() {
+      return readSettingsFromStorage();
+    },
+    readSettings() {
+      const settings = readSettingsFromStorage();
+      if (settings) {
+        this.check.company = settings.company;
+        this.check.busStop = settings.busStop;
+        this.check.route = settings.route;
+        this.check.dir = settings.dir;
+        this.check.serviceType = settings.serviceType;
+      }
+    },
+    async updateSettings(setting) {
       console.log("Saving setting");
       this.check.company = setting.company;
-      this.check.busStop = setting.stop;
+      this.check.busStop = setting.busStop;
       this.check.route = setting.route;
       this.check.dir = setting.dir;
       this.check.serviceType = setting.serviceType;
@@ -104,9 +122,11 @@ const app = {
     },
   },
   created: async function () {
-    await this.updateRouteStopInfo();
+    // await this.updateRouteStopInfo();
   },
   mounted: async function () {
+    this.readSettings();
+    await this.updateRouteStopInfo();
     await this.updateAll();
     setInterval(async () => {
       await this.updateAll();
@@ -172,7 +192,10 @@ export default app;
           </template>
         </div>
       </div>
-      <StationSettings title="Settings" @update-setting="updateSetting" />
+      <StationSettings
+        :settings="this.getSettingsFromStorage()"
+        @update-settings="updateSettings"
+      />
     </div>
   </div>
 </template>
