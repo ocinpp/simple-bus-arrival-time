@@ -2,6 +2,14 @@ import moment from "moment";
 import { NLB_STOPS } from "./nlb";
 
 const etaNlb = {
+  async getRoutes() {
+    return [];
+  },
+
+  async getStops() {
+    return [];
+  },
+
   async getRoute(route, dir, serviceType) {
     let res = null;
 
@@ -61,7 +69,11 @@ const etaNlb = {
     }
   },
 
-  async getEtas(busStop, route, dir, lang) {
+  async getRouteStops() {
+    return [];
+  },
+
+  async getEtas(busStop, route, dir, serviceType, lang) {
     let res = [];
     const url = `https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&routeId=${route}&stopId=${busStop}&language=en`;
 
@@ -102,8 +114,8 @@ const etaNlb = {
     return res;
   },
 
-  async getEtaDisplay(busStop, route, dir, lang) {
-    const etas = await this.getEtas(busStop, route, dir, lang);
+  async getEtaDisplay(busStop, route, dir, serviceType, lang) {
+    const etas = await this.getEtas(busStop, route, dir, serviceType, lang);
     for (const eta of etas) {
       // format the eta time
       if (!!eta.eta) {
