@@ -14,7 +14,6 @@ const etaKmb = {
       console.error(error);
       throw error;
     }
-    console.log(res);
     return res;
   },
 
@@ -43,7 +42,6 @@ const etaKmb = {
       const data = await response.json();
       console.log(data["generated_timestamp"]);
       res = data.data;
-      console.log(res);
     } catch (error) {
       console.error(error);
       throw error;
