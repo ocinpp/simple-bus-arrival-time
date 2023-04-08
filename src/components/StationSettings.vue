@@ -12,16 +12,16 @@ export default {
       error: "",
       modalOpen: false,
       selected: {
-        company: this.settings.company || "",
-        route: this.settings.route || "",
-        dir: this.settings.dir || "",
-        serviceType: this.settings.serviceType || "",
-        busStop: this.settings.busStop || "",
+        company: this.settings?.company || "",
+        route: this.settings?.route || "",
+        dir: this.settings?.dir || "",
+        serviceType: this.settings?.serviceType || "",
+        busStop: this.settings?.busStop || "",
       },
       routeDirServiceType: this.joinRouteDirServiceType(
-        this.settings.route || "",
-        this.settings.dir || "",
-        this.settings.serviceType || ""
+        this.settings?.route || "",
+        this.settings?.dir || "",
+        this.settings?.serviceType || ""
       ),
       companyList: [
         { code: "KMB", name: "Kowloon Motor Bus" },
