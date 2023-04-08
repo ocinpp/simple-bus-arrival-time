@@ -6,7 +6,8 @@ export default {
   emits: ["updateSetting"],
   data() {
     return {
-      count: 0,
+      message: "Please choose the bus company, bus route and bus stop.",
+      error: "",
       modalOpen: false,
       selected: {
         company: null,
@@ -48,6 +49,19 @@ export default {
   },
   methods: {
     saveSettings() {
+      if (
+        this.selected.company == null ||
+        this.selected.route == null ||
+        this.selected.dir == null ||
+        this.selected.serviceType == null ||
+        this.selected.stop == null
+      ) {
+        this.error = "Please select the values!";
+        return;
+      } else {
+        this.error = "";
+      }
+
       const e = {
         company: this.selected.company,
         route: this.selected.route,
@@ -55,7 +69,9 @@ export default {
         serviceType: this.selected.serviceType,
         stop: this.selected.stop,
       };
+
       this.$emit("updateSetting", e);
+      this.modalOpen = false;
     },
     getDirection(d) {
       switch (d) {
@@ -105,10 +121,8 @@ export default {
 </script>
 
 <template>
-  <!-- <h1 style="color: var(--color-text)">{{ msg }}</h1> -->
-
-  <div class="card" style="color: var(--color-text)">
-    <button type="button" @click="modalOpen = true">Open Settings</button>
+  <div class="card text-right" style="color: var(--color-primary)">
+    <button type="button" @click="modalOpen = true">Settings</button>
   </div>
   <teleport to="body">
     <div
@@ -117,18 +131,25 @@ export default {
       class="modal fixed inset-0 overflow-y-auto"
     >
       <div class="flex justify-center items-center h-screen">
-        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-1/2">
+        <div
+          class="bg-[var(--color-bg)] shadow-md rounded px-8 pt-6 pb-8 mb-4 w-96 md:w-2/3"
+          style="color: var(--color-primary)"
+        >
           <div class="mb-4">
             <h2 class="text-xl font-bold">{{ title }}</h2>
           </div>
           <div class="mb-4">
-            <p>Modal content goes here.</p>
+            <p>{{ message }}</p>
           </div>
           <div class="mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-6">
-              <div>Company</div>
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+              <div>Bus Company:</div>
               <div class="md:col-start-2 md:col-span-5">
-                <select v-model="selected.company">
+                <select
+                  v-model="selected.company"
+                  style="color: var(--color-bg)"
+                >
+                  <option />
                   <option
                     v-for="company of companyList"
                     v-bind:key="company.code"
@@ -139,9 +160,13 @@ export default {
                 </select>
               </div>
 
-              <div>Route (To)</div>
+              <div>Bus Route (To):</div>
               <div class="md:col-start-2 md:col-span-5">
-                <select v-model="routeDirServiceType">
+                <select
+                  v-model="routeDirServiceType"
+                  style="color: var(--color-bg)"
+                >
+                  <option />
                   <option
                     v-for="route of routeList"
                     v-bind:key="route.route + route.bound + route.service_type"
@@ -154,9 +179,10 @@ export default {
                 </select>
               </div>
 
-              <div>Stop</div>
+              <div>Bus Stop:</div>
               <div class="md:col-start-2 md:col-span-5">
-                <select v-model="selected.stop">
+                <select v-model="selected.stop" style="color: var(--color-bg)">
+                  <option />
                   <option
                     v-for="stop of stopList"
                     v-bind:key="stop.stop"
@@ -168,14 +194,18 @@ export default {
               </div>
             </div>
           </div>
+          <div
+            class="mb-4"
+            style="color: var(--color-secondary)"
+            v-show="error"
+          >
+            <p>{{ error }}</p>
+          </div>
           <div class="flex justify-end">
             <button
               class="bg-[var(--color-accent)] hover:bg-blue-700 font-bold py-2 px-4 mx-2 rounded"
               style="color: var(--color-text)"
-              @click="
-                saveSettings();
-                modalOpen = false;
-              "
+              @click="saveSettings()"
             >
               Save
             </button>
@@ -195,9 +225,6 @@ export default {
 
 <style scoped>
 .modal {
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal div {
+  background-color: rgba(0, 0, 0, 0.8);
 }
 </style>
