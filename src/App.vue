@@ -37,7 +37,7 @@ const app = {
   },
   methods: {
     async updateSetting(setting) {
-      console.log("Saving:" + setting);
+      console.log("Saving setting");
       this.check.company = setting.company;
       this.check.busStop = setting.stop;
       this.check.route = setting.route;
