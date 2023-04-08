@@ -35,8 +35,8 @@ export default {
       if (!!newValue) {
         const arr = newValue.split("|");
         this.selected.route = arr[0];
-        this.selected.dir = this.getDirection(arr[1]);
-        this.selected.serviceType = arr[2];
+        this.selected.dir = this.getDirection(arr[1] || "1");
+        this.selected.serviceType = arr[2] || "";
 
         this.getAllStops(
           this.selected.company,
@@ -96,20 +96,11 @@ export default {
       let routeStops = [];
       try {
         const stops = await getEtaByCompany(company).getStops();
-        const routeStopsSimple = await getEtaByCompany(company).getRouteStops(
+        routeStops = await getEtaByCompany(company).getRouteStops(
           route,
           dir,
           serviceType
         );
-        routeStops = routeStopsSimple.map((s) => {
-          const stopName = stops.find((stop) => stop.stop === s.stop);
-          return {
-            ...s,
-            name_en: stopName.name_en,
-            name_tc: stopName.name_tc,
-            name_sc: stopName.name_sc,
-          };
-        });
       } catch (error) {
         console.log(error);
         console.log("Cannot get all stops in the route");
@@ -173,10 +164,8 @@ export default {
                   <option />
                   <option
                     v-for="route of routeList"
-                    v-bind:key="route.route + route.bound + route.service_type"
-                    v-bind:value="
-                      route.route + '|' + route.bound + '|' + route.service_type
-                    "
+                    v-bind:key="route.routeId"
+                    v-bind:value="route.routeId"
                   >
                     {{ route.route }} - {{ route.dest_en }}
                   </option>

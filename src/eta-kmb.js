@@ -9,7 +9,14 @@ const etaKmb = {
       const response = await fetch(url);
       const data = await response.json();
       console.log(data["generated_timestamp"]);
-      res = data.data;
+      // add routeId by combining
+      // route.route + '|' + route.bound + '|' + route.service_type
+      res = data.data.map((route) => {
+        return {
+          ...route,
+          routeId: route.route + "|" + route.bound + "|" + route.service_type,
+        };
+      });
     } catch (error) {
       console.error(error);
       throw error;
@@ -51,13 +58,25 @@ const etaKmb = {
 
   async getRouteStops(route, dir, serviceType) {
     let res = null;
+    const allStops = await this.getStops();
+
     const url = `https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dir}/${serviceType}`;
 
     try {
       const response = await fetch(url);
       const data = await response.json();
       console.log(data["generated_timestamp"]);
-      res = data.data;
+      const routeStops = data.data;
+
+      res = routeStops.map((s) => {
+        const stopName = allStops.find((stop) => stop.stop === s.stop);
+        return {
+          ...s,
+          name_en: stopName.name_en,
+          name_tc: stopName.name_tc,
+          name_sc: stopName.name_sc,
+        };
+      });
     } catch (error) {
       console.error(error);
       throw error;
