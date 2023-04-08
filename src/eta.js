@@ -16,3 +16,12 @@ export function extractNumber(route) {
   const num = route.replace(/[^0-9]/g, "");
   return parseInt(num != null ? num : route);
 }
+
+export function readSettingsFromStorage() {
+  const settingsStr = localStorage.getItem("settings");
+  if (settingsStr) {
+    return JSON.parse(settingsStr);
+  } else {
+    return null;
+  }
+}
