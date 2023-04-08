@@ -56,7 +56,7 @@ export default {
         this.selected.serviceType == null ||
         this.selected.stop == null
       ) {
-        this.error = "Please select the values!";
+        this.error = "Please select values!";
         return;
       } else {
         this.error = "";
@@ -121,7 +121,7 @@ export default {
 </script>
 
 <template>
-  <div class="card text-right" style="color: var(--color-primary)">
+  <div style="color: var(--color-primary)">
     <button type="button" @click="modalOpen = true">Settings</button>
   </div>
   <teleport to="body">
@@ -132,7 +132,7 @@ export default {
     >
       <div class="flex justify-center items-center h-screen">
         <div
-          class="bg-[var(--color-bg)] shadow-md rounded px-8 pt-6 pb-8 mb-4 w-96 md:w-2/3"
+          class="bg-[var(--color-bg)] shadow-md border-solid border-2 border-emerald-500 rounded px-8 pt-6 pb-6 w-96 md:w-2/3"
           style="color: var(--color-primary)"
         >
           <div class="mb-4">
@@ -143,9 +143,10 @@ export default {
           </div>
           <div class="mb-6">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-              <div>Bus Company:</div>
+              <div><label for="company">Bus Company:</label></div>
               <div class="md:col-start-2 md:col-span-5">
                 <select
+                  name="company"
                   v-model="selected.company"
                   style="color: var(--color-bg)"
                 >
@@ -160,9 +161,12 @@ export default {
                 </select>
               </div>
 
-              <div>Bus Route (To):</div>
+              <div>
+                <label for="routeDirServiceType">Bus Route (To):</label>
+              </div>
               <div class="md:col-start-2 md:col-span-5">
                 <select
+                  name="routeDirServiceType"
                   v-model="routeDirServiceType"
                   style="color: var(--color-bg)"
                 >
@@ -179,9 +183,13 @@ export default {
                 </select>
               </div>
 
-              <div>Bus Stop:</div>
+              <div><label for="busStop">Bus Stop:</label></div>
               <div class="md:col-start-2 md:col-span-5">
-                <select v-model="selected.stop" style="color: var(--color-bg)">
+                <select
+                  name="busStop"
+                  v-model="selected.stop"
+                  style="color: var(--color-bg)"
+                >
                   <option />
                   <option
                     v-for="stop of stopList"
@@ -203,14 +211,14 @@ export default {
           </div>
           <div class="flex justify-end">
             <button
-              class="bg-[var(--color-accent)] hover:bg-blue-700 font-bold py-2 px-4 mx-2 rounded"
+              class="bg-[var(--color-accent)] hover:bg-[var(--color-secondary)] font-bold py-2 px-4 mx-2 rounded"
               style="color: var(--color-text)"
               @click="saveSettings()"
             >
               Save
             </button>
             <button
-              class="bg-[var(--color-accent)] hover:bg-blue-700 font-bold py-2 px-4 mx-2 rounded"
+              class="bg-[var(--color-accent)] hover:bg-[var(--color-secondary)] font-bold py-2 px-4 mx-2 rounded"
               style="color: var(--color-text)"
               @click="modalOpen = false"
             >
