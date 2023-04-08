@@ -101,7 +101,7 @@ export default app;
     <div class="bg-[var(--color-bg)] text-[var(--color-text)] p-8">
       <div class="flex flex-col h-full items-center justify-center py-8">
         <h1
-          class="text-3xl font-bold mb-4 w-full"
+          class="text-lg md:text-4xl font-bold mb-4 w-full"
           style="color: var(--color-primary)"
         >
           @ {{ res.busStop?.name_en }} <br />
@@ -120,13 +120,13 @@ export default app;
               >
                 <div class="flex flex-col items-center justify-center h-full">
                   <div
-                    class="text-6xl font-bold mb-2"
+                    class="text-4xl md:text-6xl font-bold mb-2"
                     style="color: var(--color-text)"
                   >
                     {{ eta.etaStr }}
                   </div>
                   <div
-                    class="text-lg font-medium"
+                    class="text-lg md:text-xl font-medium"
                     style="color: var(--color-text)"
                   >
                     Arriving in {{ eta.fromNow }}
