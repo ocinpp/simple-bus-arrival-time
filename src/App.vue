@@ -1,8 +1,12 @@
 <script>
 import _ from "lodash";
 import { extractNumber, getEtaByCompany } from "./eta";
+import StationSettings from "./components/StationSettings.vue";
 
 const app = {
+  components: {
+    StationSettings,
+  },
   data() {
     return {
       now: new Date().toLocaleString(),
@@ -32,18 +36,40 @@ const app = {
     };
   },
   methods: {
-    async getRouteBusStopEta(company, busStop, route, dir, lang) {
+    async updateSetting(setting) {
+      console.log(setting);
+      this.check.company = setting.company;
+      this.check.busStop = setting.stop;
+      this.check.route = setting.route;
+      this.check.dir = setting.dir;
+      this.check.serviceType = setting.serviceType;
+
+      await this.updateRouteStopInfo();
+      await this.updateAll();
+    },
+    async getRouteBusStopEta(company, busStop, route, dir, serviceType, lang) {
       const stopObj = await getEtaByCompany(company).getStop(busStop);
       const etasObj = await getEtaByCompany(company).getEtaDisplay(
         busStop,
         route,
         dir,
+        serviceType,
         lang
       );
       return {
         stop: stopObj,
         etas: etasObj,
       };
+    },
+    async updateRouteStopInfo() {
+      this.res.route = await getEtaByCompany(this.check.company).getRoute(
+        this.check.route,
+        this.check.dir,
+        this.check.serviceType
+      );
+      this.res.busStop = await getEtaByCompany(this.check.company).getStop(
+        this.check.busStop
+      );
     },
     async updateAll() {
       const allEtas = [];
@@ -56,6 +82,7 @@ const app = {
           this.check.busStop,
           this.check.route,
           this.check.dir,
+          this.check.serviceType,
           this.lang
         );
         allEtas.push(...obj.etas);
@@ -76,14 +103,7 @@ const app = {
     },
   },
   created: async function () {
-    this.res.route = await getEtaByCompany(this.check.company).getRoute(
-      this.check.route,
-      this.check.dir,
-      this.check.serviceType
-    );
-    this.res.busStop = await getEtaByCompany(this.check.company).getStop(
-      this.check.busStop
-    );
+    await this.updateRouteStopInfo();
   },
   mounted: async function () {
     await this.updateAll();
@@ -152,6 +172,7 @@ export default app;
         </div>
       </div>
     </div>
+    <StationSettings title="Settings" @update-setting="updateSetting" />
   </div>
 </template>
 
