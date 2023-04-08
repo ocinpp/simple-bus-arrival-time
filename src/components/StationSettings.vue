@@ -1,22 +1,28 @@
 <script>
-import { extractNumber, getEtaByCompany } from "../eta";
+import { getEtaByCompany } from "../eta";
 
 export default {
-  props: ["title"],
-  emits: ["updateSetting"],
+  props: {
+    settings: Object,
+  },
+  emits: ["updateSettings"],
   data() {
     return {
-      message: "Please choose the bus company, bus route and bus stop.",
+      title: "Settings",
       error: "",
       modalOpen: false,
       selected: {
-        company: null,
-        route: null,
-        dir: null,
-        serviceType: null,
-        stop: null,
+        company: this.settings.company || "",
+        route: this.settings.route || "",
+        dir: this.settings.dir || "",
+        serviceType: this.settings.serviceType || "",
+        busStop: this.settings.busStop || "",
       },
-      routeDirServiceType: null,
+      routeDirServiceType: this.joinRouteDirServiceType(
+        this.settings.route || "",
+        this.settings.dir || "",
+        this.settings.serviceType || ""
+      ),
       companyList: [
         { code: "KMB", name: "Kowloon Motor Bus" },
         { code: "NLB", name: "New Lantao Bus" },
@@ -26,37 +32,54 @@ export default {
     };
   },
   watch: {
-    "selected.company"(newValue, oldValue) {
-      if (!!newValue) {
-        this.getAllRoutes(newValue);
-      }
+    "selected.company": {
+      immediate: true,
+      handler(newValue, oldValue) {
+        if (!!newValue) {
+          this.getAllRoutes(newValue);
+        }
+      },
     },
-    routeDirServiceType(newValue, oldValue) {
-      if (!!newValue) {
-        const arr = newValue.split("|");
-        this.selected.route = arr[0];
-        this.selected.dir = this.getDirection(arr[1] || "1");
-        this.selected.serviceType = arr[2] || "";
+    routeDirServiceType: {
+      immediate: true,
+      handler(newValue, oldValue) {
+        if (!!newValue) {
+          const arr = newValue.split("|");
+          this.selected.route = arr[0];
+          this.selected.dir = this.transformDirection(arr[1] || "");
+          this.selected.serviceType = arr[2] || "";
 
-        this.getAllStops(
-          this.selected.company,
-          this.selected.route,
-          this.selected.dir,
-          this.selected.serviceType
-        );
-      }
+          this.getAllStops(
+            this.selected.company,
+            this.selected.route,
+            this.selected.dir,
+            this.selected.serviceType
+          );
+        }
+      },
     },
   },
   methods: {
+    joinRouteDirServiceType(route, dir, serviceType) {
+      const arr = [];
+      if (route) {
+        arr.push(route);
+      }
+      if (dir) {
+        arr.push(this.transformDirectionReverse(dir));
+      }
+      if (serviceType) {
+        arr.push(serviceType);
+      }
+      return arr.join("|");
+    },
     saveSettings() {
       if (
-        this.selected.company == null ||
-        this.selected.route == null ||
-        this.selected.dir == null ||
-        this.selected.serviceType == null ||
-        this.selected.stop == null
+        this.selected.company === "" ||
+        this.selected.busStop === "" ||
+        this.routeDirServiceType === ""
       ) {
-        this.error = "Please select values!";
+        this.error = "Please choose values!";
         return;
       } else {
         this.error = "";
@@ -67,20 +90,38 @@ export default {
         route: this.selected.route,
         dir: this.selected.dir,
         serviceType: this.selected.serviceType,
-        stop: this.selected.stop,
+        busStop: this.selected.busStop,
       };
 
-      this.$emit("updateSetting", e);
+      // save to local storage
+      localStorage.setItem("settings", JSON.stringify(e));
+
+      // emit event to parent
+      this.$emit("updateSettings", e);
+
+      // close modal
       this.modalOpen = false;
     },
-    getDirection(d) {
+    transformDirection(d) {
       switch (d) {
         case "I":
           return "inbound";
         case "O":
           return "outbound";
         default:
-          return "";
+          // return unchanged value
+          return d;
+      }
+    },
+    transformDirectionReverse(d) {
+      switch (d) {
+        case "inbound":
+          return "I";
+        case "outbound":
+          return "O";
+        default:
+          // return unchanged value
+          return d;
       }
     },
     async getAllRoutes(company) {
@@ -130,7 +171,7 @@ export default {
             <h2 class="text-xl font-bold">{{ title }}</h2>
           </div>
           <div class="mb-4">
-            <p>{{ message }}</p>
+            <p>Please choose the bus company, bus route and bus stop.</p>
           </div>
           <div class="mb-6">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
@@ -141,7 +182,7 @@ export default {
                   v-model="selected.company"
                   style="color: var(--color-bg)"
                 >
-                  <option />
+                  <option value>Please choose</option>
                   <option
                     v-for="company of companyList"
                     v-bind:key="company.code"
@@ -161,7 +202,7 @@ export default {
                   v-model="routeDirServiceType"
                   style="color: var(--color-bg)"
                 >
-                  <option />
+                  <option value>Please choose</option>
                   <option
                     v-for="route of routeList"
                     v-bind:key="route.routeId"
@@ -176,10 +217,10 @@ export default {
               <div class="md:col-start-2 md:col-span-5">
                 <select
                   name="busStop"
-                  v-model="selected.stop"
+                  v-model="selected.busStop"
                   style="color: var(--color-bg)"
                 >
-                  <option />
+                  <option value>Please choose</option>
                   <option
                     v-for="stop of stopList"
                     v-bind:key="stop.stop"
