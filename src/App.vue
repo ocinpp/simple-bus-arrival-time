@@ -37,13 +37,14 @@ const app = {
   },
   methods: {
     async updateSetting(setting) {
-      console.log(setting);
+      console.log("Saving:" + setting);
       this.check.company = setting.company;
       this.check.busStop = setting.stop;
       this.check.route = setting.route;
       this.check.dir = setting.dir;
       this.check.serviceType = setting.serviceType;
 
+      // refresh data
       await this.updateRouteStopInfo();
       await this.updateAll();
     },
@@ -126,8 +127,8 @@ export default app;
         >
           @ {{ res.busStop?.name_en }} <br />
           <br />
-          # {{ res.route?.route }} <br />
-          // {{ res.route?.orig_en }} >> {{ res.route?.dest_en }}
+          # {{ res.route?.route }} // {{ res.route?.orig_en }} >>
+          {{ res.route?.dest_en }}
         </h1>
         <div
           class="flex flex-col md:flex-row md:justify-center md:items-center w-full"
@@ -171,8 +172,8 @@ export default app;
           </template>
         </div>
       </div>
+      <StationSettings title="Settings" @update-setting="updateSetting" />
     </div>
-    <StationSettings title="Settings" @update-setting="updateSetting" />
   </div>
 </template>
 
