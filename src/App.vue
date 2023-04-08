@@ -81,42 +81,47 @@ const app = {
       };
     },
     async updateRouteStopInfo() {
-      this.res.route = await getEtaByCompany(this.check.company).getRoute(
-        this.check.route,
-        this.check.dir,
-        this.check.serviceType
-      );
-      this.res.busStop = await getEtaByCompany(this.check.company).getStop(
-        this.check.busStop
-      );
+      if (this.check.company) {
+        this.res.route = await getEtaByCompany(this.check.company).getRoute(
+          this.check.route,
+          this.check.dir,
+          this.check.serviceType
+        );
+        this.res.busStop = await getEtaByCompany(this.check.company).getStop(
+          this.check.busStop
+        );
+      }
     },
     async updateAll() {
       const allEtas = [];
-      this.now = new Date().toLocaleTimeString();
-      this.isLoading = true;
 
-      try {
-        const obj = await this.getRouteBusStopEta(
-          this.check.company,
-          this.check.busStop,
-          this.check.route,
-          this.check.dir,
-          this.check.serviceType,
-          this.lang
-        );
-        allEtas.push(...obj.etas);
-      } catch (error) {
-        console.log(error);
+      if (this.check.company && this.check.route && this.check.busStop) {
+        this.now = new Date().toLocaleTimeString();
+        this.isLoading = true;
+
+        try {
+          const obj = await this.getRouteBusStopEta(
+            this.check.company,
+            this.check.busStop,
+            this.check.route,
+            this.check.dir,
+            this.check.serviceType,
+            this.lang
+          );
+          allEtas.push(...obj.etas);
+        } catch (error) {
+          console.log(error);
+        }
+
+        // sort by route
+        this.res.etas = _.sortBy(allEtas, [
+          function (e) {
+            return extractNumber(e.route);
+          },
+          "route",
+          "eta_seq",
+        ]);
       }
-
-      // sort by route
-      this.res.etas = _.sortBy(allEtas, [
-        function (e) {
-          return extractNumber(e.route);
-        },
-        "route",
-        "eta_seq",
-      ]);
 
       this.isLoading = false;
     },
