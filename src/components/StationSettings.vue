@@ -1,10 +1,7 @@
 <script>
-import { getEtaByCompany } from "../eta";
+import { getEtaByCompany, readSettingsFromStorage } from "../eta";
 
 export default {
-  props: {
-    settings: Object,
-  },
   emits: ["updateSettings"],
   data() {
     return {
@@ -12,17 +9,13 @@ export default {
       error: "",
       modalOpen: false,
       selected: {
-        company: this.settings?.company || "",
-        route: this.settings?.route || "",
-        dir: this.settings?.dir || "",
-        serviceType: this.settings?.serviceType || "",
-        busStop: this.settings?.busStop || "",
+        company: "",
+        route: "",
+        dir: "",
+        serviceType: "",
+        busStop: "",
       },
-      routeDirServiceType: this.joinRouteDirServiceType(
-        this.settings?.route || "",
-        this.settings?.dir || "",
-        this.settings?.serviceType || ""
-      ),
+      routeDirServiceType: "",
       companyList: [
         { code: "KMB", name: "Kowloon Motor Bus" },
         { code: "NLB", name: "New Lantao Bus" },
@@ -37,6 +30,15 @@ export default {
       handler(newValue, oldValue) {
         if (!!newValue) {
           this.getAllRoutes(newValue);
+        }
+
+        if (!!oldValue) {
+          // clear current selected route and bus stop
+          this.routeDirServiceType = "";
+          this.selected.route = "";
+          this.selected.dir = "";
+          this.selected.serviceType = "";
+          this.selected.busStop = "";
         }
       },
     },
@@ -55,6 +57,11 @@ export default {
             this.selected.dir,
             this.selected.serviceType
           );
+        }
+
+        if (!!oldValue) {
+          // clear current selected stop
+          this.selected.busStop = "";
         }
       },
     },
@@ -102,6 +109,27 @@ export default {
       // close modal
       this.modalOpen = false;
     },
+    openSettings() {
+      const settings = readSettingsFromStorage();
+
+      // init from settings
+      this.selected.company = settings?.company || "";
+      this.selected.route = settings?.route || "";
+      this.selected.dir = settings?.dir || "";
+      this.selected.serviceType = settings?.serviceType || "";
+      this.selected.busStop = settings?.busStop || "";
+      this.routeDirServiceType = this.joinRouteDirServiceType(
+        settings?.route || "",
+        settings?.dir || "",
+        settings?.serviceType || ""
+      );
+
+      this.modalOpen = true;
+    },
+    closeSettings() {
+      this.error = "";
+      this.modalOpen = false;
+    },
     async getAllRoutes(company) {
       let routes = [];
       try {
@@ -132,7 +160,7 @@ export default {
 
 <template>
   <div style="color: var(--color-primary)">
-    <button type="button" @click="modalOpen = true">Settings</button>
+    <button type="button" @click="openSettings()">Settings</button>
   </div>
   <teleport to="body">
     <div
@@ -231,7 +259,7 @@ export default {
             <button
               class="bg-[var(--color-accent)] hover:bg-[var(--color-secondary)] font-bold py-2 px-4 mx-2 rounded"
               style="color: var(--color-text)"
-              @click="modalOpen = false"
+              @click="closeSettings()"
             >
               Close
             </button>

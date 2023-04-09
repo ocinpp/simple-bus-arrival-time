@@ -41,9 +41,6 @@ const app = {
     };
   },
   methods: {
-    getSettingsFromStorage() {
-      return readSettingsFromStorage();
-    },
     readSettings() {
       const settings = readSettingsFromStorage();
       if (settings) {
@@ -55,7 +52,9 @@ const app = {
       }
     },
     async updateSettings(setting) {
-      console.log("Saving setting");
+      console.log("Settings saved");
+
+      // update dashboard data
       this.check.company = setting.company;
       this.check.busStop = setting.busStop;
       this.check.route = setting.route;
@@ -197,10 +196,7 @@ export default app;
           </template>
         </div>
       </div>
-      <StationSettings
-        :settings="this.getSettingsFromStorage()"
-        @update-settings="updateSettings"
-      />
+      <StationSettings @update-settings="updateSettings" />
     </div>
   </div>
 </template>
