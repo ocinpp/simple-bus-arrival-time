@@ -46,7 +46,7 @@ export default {
         if (!!newValue) {
           const arr = newValue.split("|");
           this.selected.route = arr[0];
-          this.selected.dir = this.transformDirection(arr[1] || "");
+          this.selected.dir = arr[1] || "";
           this.selected.serviceType = arr[2] || "";
 
           this.getAllStops(
@@ -66,7 +66,7 @@ export default {
         arr.push(route);
       }
       if (dir) {
-        arr.push(this.transformDirectionReverse(dir));
+        arr.push(dir);
       }
       if (serviceType) {
         arr.push(serviceType);
@@ -101,28 +101,6 @@ export default {
 
       // close modal
       this.modalOpen = false;
-    },
-    transformDirection(d) {
-      switch (d) {
-        case "I":
-          return "inbound";
-        case "O":
-          return "outbound";
-        default:
-          // return unchanged value
-          return d;
-      }
-    },
-    transformDirectionReverse(d) {
-      switch (d) {
-        case "inbound":
-          return "I";
-        case "outbound":
-          return "O";
-        default:
-          // return unchanged value
-          return d;
-      }
     },
     async getAllRoutes(company) {
       let routes = [];
@@ -180,6 +158,7 @@ export default {
                 <select
                   name="company"
                   v-model="selected.company"
+                  class="dropdown"
                   style="color: var(--color-bg)"
                 >
                   <option value>Please choose</option>
@@ -200,6 +179,7 @@ export default {
                 <select
                   name="routeDirServiceType"
                   v-model="routeDirServiceType"
+                  class="dropdown"
                   style="color: var(--color-bg)"
                 >
                   <option value>Please choose</option>
@@ -218,12 +198,13 @@ export default {
                 <select
                   name="busStop"
                   v-model="selected.busStop"
+                  class="dropdown"
                   style="color: var(--color-bg)"
                 >
                   <option value>Please choose</option>
                   <option
                     v-for="stop of stopList"
-                    v-bind:key="stop.stop"
+                    v-bind:key="stop.stop + '|' + stop.seq"
                     v-bind:value="stop.stop"
                   >
                     {{ stop.name_en }}
@@ -264,5 +245,9 @@ export default {
 <style scoped>
 .modal {
   background-color: rgba(255, 255, 255, 0.6);
+}
+
+.dropdown {
+  max-width: 100%;
 }
 </style>
