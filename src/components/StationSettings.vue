@@ -100,8 +100,12 @@ export default {
         busStop: this.selected.busStop,
       };
 
-      // save to local storage
-      localStorage.setItem("settings", JSON.stringify(e));
+      try {
+        // save to local storage
+        localStorage.setItem("settings", JSON.stringify(e));
+      } catch (error) {
+        alert("Cannot persist settings information");
+      }
 
       // emit event to parent
       this.$emit("updateSettings", e);

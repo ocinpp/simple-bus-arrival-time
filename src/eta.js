@@ -18,10 +18,14 @@ export function extractNumber(route) {
 }
 
 export function readSettingsFromStorage() {
-  const settingsStr = localStorage.getItem("settings");
-  if (settingsStr) {
-    return JSON.parse(settingsStr);
-  } else {
-    return null;
+  try {
+    const settingsStr = localStorage.getItem("settings");
+    if (settingsStr) {
+      return JSON.parse(settingsStr);
+    } else {
+      return null;
+    }
+  } catch (error) {
+    alert("Cannot read settings information!");
   }
 }
