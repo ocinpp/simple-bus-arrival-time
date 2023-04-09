@@ -1,5 +1,17 @@
 import moment from "moment";
 
+function transformDirection(d) {
+  switch (d) {
+    case "I":
+      return "inbound";
+    case "O":
+      return "outbound";
+    default:
+      // return unchanged value
+      return d;
+  }
+}
+
 const etaKmb = {
   async getRoutes() {
     let res = null;
@@ -42,7 +54,9 @@ const etaKmb = {
 
   async getRoute(route, dir, serviceType) {
     let res = null;
-    const url = `https://data.etabus.gov.hk/v1/transport/kmb/route/${route}/${dir}/${serviceType}`;
+    const url = `https://data.etabus.gov.hk/v1/transport/kmb/route/${route}/${transformDirection(
+      dir
+    )}/${serviceType}`;
 
     try {
       const response = await fetch(url);
@@ -60,7 +74,9 @@ const etaKmb = {
     let res = null;
     const allStops = await this.getStops();
 
-    const url = `https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dir}/${serviceType}`;
+    const url = `https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${transformDirection(
+      dir
+    )}/${serviceType}`;
 
     try {
       const response = await fetch(url);
