@@ -1,6 +1,5 @@
 <script>
-import _ from "lodash";
-import { extractNumber, getEtaByCompany, readSettingsFromStorage } from "./eta";
+import { getEtaByCompany, readSettingsFromStorage } from "./eta";
 import StationSettings from "./components/StationSettings.vue";
 
 const app = {
@@ -56,18 +55,15 @@ const app = {
       await this.updateAll();
     },
     async getRouteBusStopEta(company, busStop, route, dir, serviceType, lang) {
-      const stopObj = await getEtaByCompany(company).getStop(busStop);
-      const etasObj = await getEtaByCompany(company).getEtaDisplay(
+      const etas = await getEtaByCompany(company).getEtaDisplay(
         busStop,
         route,
         dir,
         serviceType,
         lang
       );
-      return {
-        stop: stopObj,
-        etas: etasObj,
-      };
+
+      return etas;
     },
     async updateRouteStopInfo() {
       if (this.check.company) {
@@ -89,7 +85,7 @@ const app = {
         this.isLoading = true;
 
         try {
-          const obj = await this.getRouteBusStopEta(
+          const etas = await this.getRouteBusStopEta(
             this.check.company,
             this.check.busStop,
             this.check.route,
@@ -97,19 +93,12 @@ const app = {
             this.check.serviceType,
             this.lang
           );
-          allEtas.push(...obj.etas);
+          allEtas.push(...etas);
         } catch (error) {
           console.log(error);
         }
 
-        // sort by route
-        this.res.etas = _.sortBy(allEtas, [
-          function (e) {
-            return extractNumber(e.route);
-          },
-          "route",
-          "eta_seq",
-        ]);
+        this.res.etas = allEtas;
       }
 
       this.isLoading = false;
