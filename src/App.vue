@@ -19,16 +19,6 @@ const app = {
         route: "",
         dir: "",
         serviceType: "",
-        // company: "KMB",
-        // busStop: "31072508CEF942C6",
-        // route: "281A",
-        // dir: "inbound",
-        // serviceType: "1",
-        // company: "NLB",
-        // busStop: "13",
-        // route: "7",
-        // dir: "inbound",
-        // serviceType: "1",
       },
       widthVariants: {
         1: "md:w-full",
@@ -126,11 +116,10 @@ const app = {
     },
   },
   created: async function () {
-    // await this.updateRouteStopInfo();
-  },
-  mounted: async function () {
     this.readSettings();
     await this.updateRouteStopInfo();
+  },
+  mounted: async function () {
     await this.updateAll();
     setInterval(async () => {
       await this.updateAll();
@@ -151,7 +140,7 @@ export default app;
         >
           @ {{ res.busStop?.name_en }} <br />
           <br />
-          # {{ res.route?.route }} // {{ res.route?.orig_en }} >>
+          # {{ res.route?.route }} // {{ res.route?.orig_en }} >>>
           {{ res.route?.dest_en }}
         </h1>
         <div
