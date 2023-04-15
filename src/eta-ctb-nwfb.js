@@ -70,6 +70,7 @@ const etaCtbNwfb = {
     let res = [];
 
     for (const companyId of COMPANY_IDS) {
+      // default is OUTBOUND
       const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route/${companyId}/${route}`;
 
       try {
@@ -77,7 +78,20 @@ const etaCtbNwfb = {
         const data = await response.json();
         console.log(data["generated_timestamp"]);
         if (!_.isEmpty(data.data)) {
-          res = data.data;
+          res =
+            dir === "O"
+              ? data.data
+              : {
+                  co: data.data.co,
+                  route: data.data.route,
+                  orig_tc: data.data.dest_tc,
+                  orig_en: data.data.dest_en,
+                  orig_sc: data.data.dest_sc,
+                  dest_tc: data.data.orig_tc,
+                  dest_en: data.data.orig_en,
+                  dest_sc: data.data.orig_sc,
+                  data_timestamp: data.data.data_timestamp,
+                };
         }
       } catch (error) {
         console.error(error);
