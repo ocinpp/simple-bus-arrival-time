@@ -1,9 +1,12 @@
 import etaKmb from "./eta-kmb";
+import etaCtbNwfb from "./eta-ctb-nwfb";
 import etaNlb from "./eta-nlb";
 
 export function getEtaByCompany(company) {
   if (company === "KMB") {
     return etaKmb;
+  } else if (company === "CTB_NWFB") {
+    return etaCtbNwfb;
   } else if (company === "NLB") {
     return etaNlb;
   } else {

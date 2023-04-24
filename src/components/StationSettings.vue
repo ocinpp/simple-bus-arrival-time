@@ -18,6 +18,7 @@ export default {
       routeDirServiceType: "",
       companyList: [
         { code: "KMB", name: "Kowloon Motor Bus" },
+        { code: "CTB_NWFB", name: "Citybus / New World First Bus" },
         { code: "NLB", name: "New Lantao Bus" },
       ],
       routeList: [],
@@ -29,6 +30,11 @@ export default {
       immediate: true,
       handler(newValue, oldValue) {
         if (!!newValue) {
+          // clear all routes and stops
+          this.routeList = [];
+          this.stopList = [];
+
+          // update routes
           this.getAllRoutes(newValue);
         }
 
@@ -51,6 +57,10 @@ export default {
           this.selected.dir = arr[1] || "";
           this.selected.serviceType = arr[2] || "";
 
+          // clear all stops
+          this.stopList = [];
+
+          // update stops
           this.getAllStops(
             this.selected.company,
             this.selected.route,
