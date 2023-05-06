@@ -16,47 +16,121 @@ function transformDirection(d) {
   }
 }
 
+async function getRouteByCompany(companyId, route, dir, serviceType) {
+  let data = null;
+
+  // default is OUTBOUND
+  const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route/${companyId}/${route}`;
+
+  try {
+    const response = await fetch(url);
+    data = await response.json();
+    console.log(data["generated_timestamp"]);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+
+  return data;
+}
+
+async function getRoutesByCompany(companyId) {
+  let data = null;
+  // default is OUTBOUND
+  const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route/${companyId}`;
+
+  try {
+    const response = await fetch(url);
+    data = await response.json();
+    console.log(data["generated_timestamp"]);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+
+  return data;
+}
+
+async function getRouteStopsByCompany(companyId, route, dir, serviceType) {
+  let data = null;
+  const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route-stop/${companyId}/${route}/${transformDirection(
+    dir
+  )}`;
+
+  try {
+    const response = await fetch(url);
+    data = await response.json();
+    console.log(data["generated_timestamp"]);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+
+  return data;
+}
+
+async function getEtasByCompany(
+  companyId,
+  busStop,
+  route,
+  dir,
+  serviceType,
+  lang
+) {
+  let data = null;
+  const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/eta/${companyId}/${busStop}/${route}`;
+
+  try {
+    const response = await fetch(url);
+    data = await response.json();
+    console.log(data["generated_timestamp"]);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+
+  return data;
+}
+
 const etaCtbNwfb = {
   async getRoutes() {
-    let res = [];
+    const res = [];
+    const promises = [];
 
+    // run in parallel
     for (const companyId of COMPANY_IDS) {
-      // default is OUTBOUND
-      const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route/${companyId}`;
+      promises.push(getRoutesByCompany(companyId));
+    }
 
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log(data["generated_timestamp"]);
+    // wait for all promises to resolve
+    const values = await Promise.all(promises);
 
-        // add routeId by combining
-        // route.route + '|' + [bound]
-        res.push(
-          ...data.data.flatMap((route) => {
-            return [
-              {
-                ...route,
-                routeId: route.route + "|" + "O",
-              },
-              {
-                co: route.co,
-                route: route.route,
-                orig_tc: route.dest_tc,
-                orig_en: route.dest_en,
-                orig_sc: route.dest_sc,
-                dest_tc: route.orig_tc,
-                dest_en: route.orig_en,
-                dest_sc: route.orig_sc,
-                data_timestamp: route.data_timestamp,
-                routeId: route.route + "|" + "I",
-              },
-            ];
-          })
-        );
-      } catch (error) {
-        console.error(error);
-        throw error;
-      }
+    // process returned values
+    for (const value of values) {
+      // add routeId by combining
+      // route.route + '|' + [bound]
+      res.push(
+        ...value.data.flatMap((route) => {
+          return [
+            {
+              ...route,
+              routeId: route.route + "|" + "O",
+            },
+            {
+              co: route.co,
+              route: route.route,
+              orig_tc: route.dest_tc,
+              orig_en: route.dest_en,
+              orig_sc: route.dest_sc,
+              dest_tc: route.orig_tc,
+              dest_en: route.orig_en,
+              dest_sc: route.orig_sc,
+              data_timestamp: route.data_timestamp,
+              routeId: route.route + "|" + "I",
+            },
+          ];
+        })
+      );
     }
 
     return res;
@@ -68,34 +142,33 @@ const etaCtbNwfb = {
 
   async getRoute(route, dir, serviceType) {
     let res = [];
+    let promises = [];
 
+    // run in parallel
     for (const companyId of COMPANY_IDS) {
-      // default is OUTBOUND
-      const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route/${companyId}/${route}`;
+      promises.push(getRouteByCompany(companyId, route, dir, serviceType));
+    }
 
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log(data["generated_timestamp"]);
-        if (!_.isEmpty(data.data)) {
-          res =
-            dir === "O"
-              ? data.data
-              : {
-                  co: data.data.co,
-                  route: data.data.route,
-                  orig_tc: data.data.dest_tc,
-                  orig_en: data.data.dest_en,
-                  orig_sc: data.data.dest_sc,
-                  dest_tc: data.data.orig_tc,
-                  dest_en: data.data.orig_en,
-                  dest_sc: data.data.orig_sc,
-                  data_timestamp: data.data.data_timestamp,
-                };
-        }
-      } catch (error) {
-        console.error(error);
-        throw error;
+    // wait for all promises to resolve
+    const values = await Promise.all(promises);
+
+    // process returned values
+    for (const value of values) {
+      if (!_.isEmpty(value.data)) {
+        res =
+          dir === "O"
+            ? value.data
+            : {
+                co: value.data.co,
+                route: value.data.route,
+                orig_tc: value.data.dest_tc,
+                orig_en: value.data.dest_en,
+                orig_sc: value.data.dest_sc,
+                dest_tc: value.data.orig_tc,
+                dest_en: value.data.orig_en,
+                dest_sc: value.data.orig_sc,
+                data_timestamp: value.data.data_timestamp,
+              };
       }
     }
 
@@ -104,34 +177,31 @@ const etaCtbNwfb = {
 
   async getRouteStops(route, dir, serviceType) {
     let res = [];
+    const promises = [];
     const allStops = this.getStops();
 
+    // run in parallel
     for (const companyId of COMPANY_IDS) {
-      const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route-stop/${companyId}/${route}/${transformDirection(
-        dir
-      )}`;
+      promises.push(getRouteStopsByCompany(companyId, route, dir, serviceType));
+    }
 
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log(data["generated_timestamp"]);
-        const routeStops = data.data;
+    // wait for all promises to resolve
+    const values = await Promise.all(promises);
 
-        res.push(
-          ...routeStops.map((s) => {
-            const stopName = allStops.find((stop) => stop.stop === s.stop);
-            return {
-              ...s,
-              name_en: stopName?.name_en,
-              name_tc: stopName?.name_tc,
-              name_sc: stopName?.name_sc,
-            };
-          })
-        );
-      } catch (error) {
-        console.error(error);
-        throw error;
-      }
+    // process returned values
+    for (const value of values) {
+      const routeStops = value.data;
+      res.push(
+        ...routeStops.map((s) => {
+          const stopName = allStops.find((stop) => stop.stop === s.stop);
+          return {
+            ...s,
+            name_en: stopName?.name_en,
+            name_tc: stopName?.name_tc,
+            name_sc: stopName?.name_sc,
+          };
+        })
+      );
     }
 
     return res;
@@ -155,27 +225,29 @@ const etaCtbNwfb = {
 
   async getEtas(busStop, route, dir, serviceType, lang) {
     let res = [];
+    let promises = [];
 
+    // run in parallel
     for (const companyId of COMPANY_IDS) {
-      const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/eta/${companyId}/${busStop}/${route}`;
+      promises.push(
+        getEtasByCompany(companyId, busStop, route, dir, serviceType, lang)
+      );
+    }
 
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log(data["generated_timestamp"]);
-        const etas = data.data;
-        res.push(
-          ...etas.filter(
-            (o) =>
-              o.route === route &&
-              dir.toUpperCase().startsWith(o.dir.toUpperCase()) &&
-              !!o.eta
-          )
-        );
-      } catch (error) {
-        console.error(error);
-        throw error;
-      }
+    // wait for all promises to resolve
+    const values = await Promise.all(promises);
+
+    // process returned values
+    for (const value of values) {
+      const etas = value.data;
+      res.push(
+        ...etas.filter(
+          (o) =>
+            o.route === route &&
+            dir.toUpperCase().startsWith(o.dir.toUpperCase()) &&
+            !!o.eta
+        )
+      );
     }
 
     return res;
