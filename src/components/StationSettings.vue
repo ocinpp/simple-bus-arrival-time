@@ -156,7 +156,6 @@ export default {
     async getAllStops(company, route, dir, serviceType) {
       let routeStops = [];
       try {
-        const stops = await getEtaByCompany(company).getStops();
         routeStops = await getEtaByCompany(company).getRouteStops(
           route,
           dir,
