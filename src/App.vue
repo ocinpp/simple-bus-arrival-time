@@ -109,6 +109,7 @@ const app = {
     await this.updateRouteStopInfo();
   },
   mounted: async function () {
+    await this.updateRouteStopInfo();
     await this.updateAll();
     setInterval(async () => {
       await this.updateAll();
