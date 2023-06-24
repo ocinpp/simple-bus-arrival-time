@@ -48,6 +48,9 @@ $ npm run build
 
 # preview
 $ npm run preview
+
+# linting
+$ npm run lint
 ```
 
 ## Vue 3 + Vite
@@ -57,6 +60,18 @@ For Vue 3, this project will be using **Options API**.
 ### Recommended IDE Setup
 
 - [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+- ESLint
+- [ESLint plugin for Vue.js](https://eslint.vuejs.org/)
+- Prettier
+
+The default `vue` formatter may need to be changed to `sbenp.prettier-vscode` in VSCode's `settings.json` so that **Prettier** is used for formatting.
+
+```json
+"[vue]": {
+  // "editor.defaultFormatter": "Vue.volar"
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
+},
+```
 
 ## Tailwind CSS
 
