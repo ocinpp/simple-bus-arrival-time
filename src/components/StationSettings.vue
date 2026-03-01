@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import { getEtaByCompany, readSettingsFromStorage } from "../eta";
 import type { CompanyCode, RouteInfo, StopInfo } from "../types";
+import SearchableSelect from "./SearchableSelect.vue";
 
 const emit = defineEmits(["updateSettings"]);
 
 const title = "Settings";
 const error = ref("");
 const modalOpen = ref(false);
+const loadingRoutes = ref(false);
+const loadingStops = ref(false);
 const selected = reactive({
     company: "",
     route: "",
@@ -23,6 +26,25 @@ const companyList = [
 ];
 const routeList = ref<RouteInfo[]>([]);
 const stopList = ref<StopInfo[]>([]);
+
+const companyOptions = companyList.map((c) => ({
+    value: c.code,
+    label: c.name,
+}));
+
+const routeOptions = computed(() =>
+    routeList.value.map((r) => ({
+        value: r.routeId,
+        label: `${r.route} - ${r.dest_en ?? ""}`,
+    }))
+);
+
+const stopOptions = computed(() =>
+    stopList.value.map((s) => ({
+        value: s.stop,
+        label: s.name_en ?? s.stop,
+    }))
+);
 
 function joinRouteDirServiceType(
     route: string,
@@ -119,12 +141,14 @@ function closeSettings() {
 
 async function getAllRoutes(company: string) {
     let routes: RouteInfo[] = [];
+    loadingRoutes.value = true;
     try {
         routes = await getEtaByCompany(company as CompanyCode).getRoutes();
     } catch {
         console.error("Cannot get all routes");
     }
     routeList.value = routes;
+    loadingRoutes.value = false;
 }
 
 async function getAllStops(
@@ -134,6 +158,7 @@ async function getAllStops(
     serviceType: string
 ) {
     let routeStops: StopInfo[] = [];
+    loadingStops.value = true;
     try {
         routeStops = await getEtaByCompany(
             company as CompanyCode
@@ -142,6 +167,7 @@ async function getAllStops(
         console.error("Cannot get all stops in the route", err);
     }
     stopList.value = routeStops;
+    loadingStops.value = false;
 }
 </script>
 
@@ -178,20 +204,11 @@ async function getAllStops(
                         <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                             <div><label for="company">Bus Company:</label></div>
                             <div class="md:col-start-2 md:col-span-5">
-                                <select
+                                <SearchableSelect
                                     v-model="selected.company"
-                                    name="company"
-                                    class="dropdown"
-                                >
-                                    <option value>Please choose</option>
-                                    <option
-                                        v-for="company of companyList"
-                                        :key="company.code"
-                                        :value="company.code"
-                                    >
-                                        {{ company.name }}
-                                    </option>
-                                </select>
+                                    :options="companyOptions"
+                                    placeholder="Type to search company..."
+                                />
                             </div>
 
                             <div>
@@ -200,38 +217,22 @@ async function getAllStops(
                                 >
                             </div>
                             <div class="md:col-start-2 md:col-span-5">
-                                <select
+                                <SearchableSelect
                                     v-model="routeDirServiceType"
-                                    name="routeDirServiceType"
-                                    class="dropdown"
-                                >
-                                    <option value>Please choose</option>
-                                    <option
-                                        v-for="route of routeList"
-                                        :key="route.routeId"
-                                        :value="route.routeId"
-                                    >
-                                        {{ route.route }} - {{ route.dest_en }}
-                                    </option>
-                                </select>
+                                    :options="routeOptions"
+                                    :loading="loadingRoutes"
+                                    placeholder="Type to search route..."
+                                />
                             </div>
 
                             <div><label for="busStop">Bus Stop:</label></div>
                             <div class="md:col-start-2 md:col-span-5">
-                                <select
+                                <SearchableSelect
                                     v-model="selected.busStop"
-                                    name="busStop"
-                                    class="dropdown"
-                                >
-                                    <option value>Please choose</option>
-                                    <option
-                                        v-for="stop of stopList"
-                                        :key="stop.stop + '|' + stop.seq"
-                                        :value="stop.stop"
-                                    >
-                                        {{ stop.name_en }}
-                                    </option>
-                                </select>
+                                    :options="stopOptions"
+                                    :loading="loadingStops"
+                                    placeholder="Type to search stop..."
+                                />
                             </div>
                         </div>
                     </div>
