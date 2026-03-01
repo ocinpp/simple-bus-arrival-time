@@ -190,7 +190,7 @@ async function getAllStops(
                 class="flex justify-center items-center min-h-screen py-6 px-4"
             >
                 <div
-                    class="bg-[var(--color-bg)] shadow-md border-solid border-2 border-emerald-500 rounded px-8 pt-6 pb-6 w-96 md:w-2/3 max-h-[90vh] overflow-y-auto"
+                    class="bg-[var(--color-bg)] shadow-md border-solid border-2 border-emerald-500 rounded px-8 pt-6 pb-6 w-96 md:w-2/3 max-h-[90vh] overflow-y-auto md:overflow-visible"
                     style="color: var(--color-primary)"
                 >
                     <div class="mb-4">
@@ -204,7 +204,13 @@ async function getAllStops(
                     </div>
                     <div class="mb-6">
                         <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-                            <div><label for="company">Bus Company:</label></div>
+                            <div>
+                                <label
+                                    for="company"
+                                    class="opacity-70"
+                                    >Bus Company:</label
+                                >
+                            </div>
                             <div class="md:col-start-2 md:col-span-5">
                                 <SearchableSelect
                                     v-model="selected.company"
@@ -214,7 +220,9 @@ async function getAllStops(
                             </div>
 
                             <div>
-                                <label for="routeDirServiceType"
+                                <label
+                                    for="routeDirServiceType"
+                                    class="opacity-70"
                                     >Bus Route (To):</label
                                 >
                             </div>
@@ -227,7 +235,13 @@ async function getAllStops(
                                 />
                             </div>
 
-                            <div><label for="busStop">Bus Stop:</label></div>
+                            <div>
+                                <label
+                                    for="busStop"
+                                    class="opacity-70"
+                                    >Bus Stop:</label
+                                >
+                            </div>
                             <div class="md:col-start-2 md:col-span-5">
                                 <SearchableSelect
                                     v-model="selected.busStop"
