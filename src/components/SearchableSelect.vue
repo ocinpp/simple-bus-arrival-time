@@ -176,7 +176,8 @@ function onKeydown(e: KeyboardEvent) {
         <div
             v-if="isOpen"
             ref="listRef"
-            class="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded border border-[var(--color-primary)] bg-[var(--color-bg)]"
+            class="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto overscroll-contain touch-pan-y rounded border border-[var(--color-primary)] bg-[var(--color-bg)]"
+            style="-webkit-overflow-scrolling: touch"
         >
             <div
                 v-if="filteredOptions.length === 0"
