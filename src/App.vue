@@ -134,7 +134,64 @@ onUnmounted(() => {
                     # {{ res.route?.route }} // {{ res.route?.orig_en }} >>>
                     {{ res.route?.dest_en }}
                 </h1>
+
                 <div
+                    class="flex items-center gap-3 mb-4 w-full text-sm opacity-70"
+                >
+                    <span>Last updated: {{ now }}</span>
+                    <button
+                        class="inline-flex items-center gap-1 px-2 py-1 rounded bg-[var(--color-accent)] hover:bg-[var(--color-secondary)] text-[var(--color-text)] text-xs font-medium transition-colors"
+                        :disabled="isLoading"
+                        @click="updateAll()"
+                    >
+                        <svg
+                            class="w-3 h-3"
+                            :class="{ 'animate-spin': isLoading }"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+
+                <div
+                    v-if="isLoading"
+                    class="flex items-center justify-center w-full py-8"
+                >
+                    <svg
+                        class="animate-spin h-8 w-8"
+                        style="color: var(--color-primary)"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                    >
+                        <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                        />
+                        <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                    </svg>
+                </div>
+
+                <div
+                    v-else
                     class="flex flex-col md:flex-row md:justify-center md:items-center w-full"
                 >
                     <template v-if="res.etas && res.etas.length > 0">

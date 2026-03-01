@@ -33,6 +33,16 @@ The project makes use of 3 APIs from [Bus service of New Lantao Bus Company (197
 
 It also makes use of a static TypeScript file (`nlb.ts`) that contains all the bus stops.
 
+## Features
+
+- **Real-time ETA display** with auto-refresh every 30 seconds
+- **Loading indicator** while fetching arrival data
+- **Last-updated timestamp** with manual refresh button
+- **Searchable dropdowns** for bus company, route, and stop selection with keyboard navigation
+- **Loading spinners** on dropdowns while fetching routes and stops
+- **Dark theme** with persistent settings via localStorage
+- **Responsive layout** for desktop and mobile
+
 ## Tech Stack
 
 - **Vue 3** with Composition API (`<script setup>`)
