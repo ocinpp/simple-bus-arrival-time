@@ -19,6 +19,7 @@ export default tseslint.config(
         rules: {
             "vue/multi-word-component-names": "off",
             "vue/html-indent": "off",
+            "vue/html-self-closing": "off",
         },
     }
 );

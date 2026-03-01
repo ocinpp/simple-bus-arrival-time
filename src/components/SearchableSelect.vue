@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from "vue";
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 
 export interface SelectOption {
     value: string;
@@ -22,6 +22,21 @@ const isOpen = ref(false);
 const highlightIndex = ref(-1);
 const containerRef = ref<HTMLElement | null>(null);
 const listRef = ref<HTMLElement | null>(null);
+const sheetSearchRef = ref<HTMLInputElement | null>(null);
+const isMobile = ref(false);
+
+function checkMobile() {
+    isMobile.value = window.innerWidth < 768;
+}
+
+onMounted(() => {
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("resize", checkMobile);
+});
 
 const selectedLabel = computed(() => {
     const found = props.options.find((o) => o.value === props.modelValue);
@@ -45,11 +60,23 @@ watch(isOpen, (val) => {
     if (val) {
         searchText.value = "";
         highlightIndex.value = -1;
+        if (isMobile.value) {
+            document.body.style.overflow = "hidden";
+            nextTick(() => sheetSearchRef.value?.focus());
+        }
+    } else if (isMobile.value) {
+        document.body.style.overflow = "";
     }
 });
 
 function open() {
+    if (props.loading) return;
     isOpen.value = true;
+}
+
+function close() {
+    isOpen.value = false;
+    searchText.value = "";
 }
 
 function selectOption(option: SelectOption) {
@@ -59,6 +86,7 @@ function selectOption(option: SelectOption) {
 }
 
 function onBlur(e: FocusEvent) {
+    if (isMobile.value) return;
     if (
         containerRef.value &&
         e.relatedTarget instanceof Node &&
@@ -66,8 +94,7 @@ function onBlur(e: FocusEvent) {
     ) {
         return;
     }
-    isOpen.value = false;
-    searchText.value = "";
+    close();
 }
 
 function scrollToHighlighted() {
@@ -109,8 +136,7 @@ function onKeydown(e: KeyboardEvent) {
             }
             break;
         case "Escape":
-            isOpen.value = false;
-            searchText.value = "";
+            close();
             break;
     }
 }
@@ -122,14 +148,19 @@ function onKeydown(e: KeyboardEvent) {
         class="searchable-select relative"
         @focusout="onBlur"
     >
+        <!-- Trigger input -->
         <div class="relative">
             <input
                 type="text"
                 class="dropdown w-full pr-8"
+                :class="{ 'opacity-50 cursor-not-allowed': loading }"
                 :placeholder="placeholder ?? 'Search...'"
-                :value="isOpen ? searchText : selectedLabel"
-                @input="searchText = ($event.target as HTMLInputElement).value"
+                :value="isOpen && !isMobile ? searchText : selectedLabel"
+                :disabled="loading"
+                :readonly="isMobile"
+                @click="open"
                 @focus="open"
+                @input="searchText = ($event.target as HTMLInputElement).value"
                 @keydown="onKeydown"
             />
             <!-- Loading spinner -->
@@ -173,11 +204,12 @@ function onKeydown(e: KeyboardEvent) {
                 />
             </svg>
         </div>
+
+        <!-- Desktop: inline dropdown -->
         <div
-            v-if="isOpen"
+            v-if="isOpen && !isMobile"
             ref="listRef"
-            class="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto overscroll-contain touch-pan-y rounded border border-[var(--color-primary)] bg-[var(--color-bg)]"
-            style="-webkit-overflow-scrolling: touch"
+            class="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded border border-[var(--color-primary)] bg-[var(--color-bg)] text-[var(--color-text)]"
         >
             <div
                 v-if="filteredOptions.length === 0"
@@ -200,5 +232,79 @@ function onKeydown(e: KeyboardEvent) {
                 {{ option.label }}
             </div>
         </div>
+
+        <!-- Mobile: bottom sheet -->
+        <teleport to="body">
+            <div
+                v-if="isOpen && isMobile"
+                class="fixed inset-0 z-[100] flex flex-col"
+            >
+                <!-- Backdrop -->
+                <div
+                    class="absolute inset-0 bg-black/70"
+                    @click="close"
+                />
+
+                <!-- Sheet -->
+                <div
+                    class="relative z-10 flex-1 min-h-0 bg-[var(--color-bg)] text-[var(--color-text)] flex flex-col"
+                >
+                    <!-- Handle bar -->
+                    <div class="flex justify-center pt-3 pb-1">
+                        <div
+                            class="w-10 h-1 rounded-full bg-[var(--color-text)] opacity-30"
+                        />
+                    </div>
+
+                    <!-- Search input -->
+                    <div class="px-4 pb-3">
+                        <input
+                            ref="sheetSearchRef"
+                            type="text"
+                            inputmode="search"
+                            autocomplete="off"
+                            class="dropdown w-full"
+                            :placeholder="placeholder ?? 'Search...'"
+                            :value="searchText"
+                            @input="
+                                searchText = ($event.target as HTMLInputElement)
+                                    .value
+                            "
+                        />
+                    </div>
+
+                    <!-- Options list -->
+                    <div
+                        ref="listRef"
+                        class="flex-1 overflow-y-auto overscroll-contain px-2 pb-[env(safe-area-inset-bottom,1rem)]"
+                        style="-webkit-overflow-scrolling: touch"
+                    >
+                        <div
+                            v-if="filteredOptions.length === 0"
+                            class="px-3 py-4 text-sm opacity-50 text-center"
+                        >
+                            No results found
+                        </div>
+                        <div
+                            v-for="option in filteredOptions"
+                            :key="option.value"
+                            class="px-3 py-3 text-sm rounded-lg mb-1 active:bg-[var(--color-accent)] transition-colors"
+                            :class="{
+                                'bg-[var(--color-accent)]':
+                                    option.value === modelValue,
+                            }"
+                            style="
+                                min-height: 44px;
+                                display: flex;
+                                align-items: center;
+                            "
+                            @click="selectOption(option)"
+                        >
+                            {{ option.label }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </teleport>
     </div>
 </template>
