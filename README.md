@@ -39,7 +39,9 @@ It also makes use of a static TypeScript file (`nlb.ts`) that contains all the b
 - **Loading indicator** while fetching arrival data
 - **Last-updated timestamp** with manual refresh button
 - **Searchable dropdowns** for bus company, route, and stop selection with keyboard navigation
-- **Loading spinners** on dropdowns while fetching routes and stops
+- **Loading spinners** on dropdowns while fetching routes and stops (dropdowns disabled during loading)
+- **Mobile bottom sheet** for dropdown selection with full-screen overlay, search input, and touch-friendly targets
+- **Desktop inline dropdown** with overflow-visible modal so options expand beyond the settings panel
 - **Dark theme** with persistent settings via localStorage
 - **Responsive layout** for desktop and mobile
 
