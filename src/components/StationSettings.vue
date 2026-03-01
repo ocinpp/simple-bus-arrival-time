@@ -186,9 +186,11 @@ async function getAllStops(
             id="modal"
             class="modal fixed inset-0 overflow-y-auto"
         >
-            <div class="flex justify-center items-center h-screen">
+            <div
+                class="flex justify-center items-center min-h-screen py-6 px-4"
+            >
                 <div
-                    class="bg-[var(--color-bg)] shadow-md border-solid border-2 border-emerald-500 rounded px-8 pt-6 pb-6 w-96 md:w-2/3"
+                    class="bg-[var(--color-bg)] shadow-md border-solid border-2 border-emerald-500 rounded px-8 pt-6 pb-6 w-96 md:w-2/3 max-h-[90vh] overflow-y-auto"
                     style="color: var(--color-primary)"
                 >
                     <div class="mb-4">
