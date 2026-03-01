@@ -1,100 +1,30 @@
-import moment from "moment";
-import _ from "lodash";
 import { CTB_NWFB_STOPS } from "./ctb-nwfb";
+import type { EtaInfo, EtaService, RouteInfo, StopInfo } from "./types";
+import { fetchJson, transformDirection, formatEtaDisplay } from "./api-utils";
 
-const COMPANY_IDS = ["ctb", "nwfb"];
+const COMPANY_IDS = ["ctb", "nwfb"] as const;
 
-function transformDirection(d) {
-    switch (d) {
-        case "I":
-            return "inbound";
-        case "O":
-            return "outbound";
-        default:
-            // return unchanged value
-            return d;
-    }
+async function getRouteByCompany(companyId: string, route: string, _dir: string, _serviceType: string) {
+    return fetchJson(`https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route/${companyId}/${route}`);
 }
 
-async function getRouteByCompany(companyId, route, dir, serviceType) {
-    let data = null;
-
-    // default is OUTBOUND
-    const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route/${companyId}/${route}`;
-
-    try {
-        const response = await fetch(url);
-        data = await response.json();
-        console.log(data["generated_timestamp"]);
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
-
-    return data;
+async function getRoutesByCompany(companyId: string) {
+    return fetchJson(`https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route/${companyId}`);
 }
 
-async function getRoutesByCompany(companyId) {
-    let data = null;
-    // default is OUTBOUND
-    const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route/${companyId}`;
-
-    try {
-        const response = await fetch(url);
-        data = await response.json();
-        console.log(data["generated_timestamp"]);
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
-
-    return data;
+async function getRouteStopsByCompany(companyId: string, route: string, dir: string, _serviceType: string) {
+    return fetchJson(
+        `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route-stop/${companyId}/${route}/${transformDirection(dir)}`
+    );
 }
 
-async function getRouteStopsByCompany(companyId, route, dir, serviceType) {
-    let data = null;
-    const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/route-stop/${companyId}/${route}/${transformDirection(
-        dir
-    )}`;
-
-    try {
-        const response = await fetch(url);
-        data = await response.json();
-        console.log(data["generated_timestamp"]);
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
-
-    return data;
+async function getEtasByCompany(companyId: string, busStop: string, route: string, _dir: string, _serviceType: string, _lang: string) {
+    return fetchJson(`https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/eta/${companyId}/${busStop}/${route}`);
 }
 
-async function getEtasByCompany(
-    companyId,
-    busStop,
-    route,
-    dir,
-    serviceType,
-    lang
-) {
-    let data = null;
-    const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/eta/${companyId}/${busStop}/${route}`;
-
-    try {
-        const response = await fetch(url);
-        data = await response.json();
-        console.log(data["generated_timestamp"]);
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
-
-    return data;
-}
-
-const etaCtbNwfb = {
-    async getRoutes() {
-        const res = [];
+const etaCtbNwfb: EtaService = {
+    async getRoutes(): Promise<RouteInfo[]> {
+        const res: RouteInfo[] = [];
         const promises = [];
 
         // run in parallel
@@ -110,7 +40,7 @@ const etaCtbNwfb = {
             // add routeId by combining
             // route.route + '|' + [bound]
             res.push(
-                ...value.data.flatMap((route) => {
+                ...value.data.flatMap((route: Record<string, string>) => {
                     return [
                         {
                             ...route,
@@ -136,13 +66,13 @@ const etaCtbNwfb = {
         return res;
     },
 
-    getStops() {
-        return CTB_NWFB_STOPS;
+    getStops(): StopInfo[] {
+        return CTB_NWFB_STOPS.filter((s): s is Required<typeof s> => !!s.stop) as StopInfo[];
     },
 
-    async getRoute(route, dir, serviceType) {
-        let res = [];
-        let promises = [];
+    async getRoute(route: string, dir: string, serviceType: string): Promise<RouteInfo | null> {
+        let res: RouteInfo | null = null;
+        const promises = [];
 
         // run in parallel
         for (const companyId of COMPANY_IDS) {
@@ -156,31 +86,32 @@ const etaCtbNwfb = {
 
         // process returned values
         for (const value of values) {
-            if (!_.isEmpty(value.data)) {
+            if (value.data && Object.keys(value.data).length > 0) {
                 res =
                     dir === "O"
                         ? value.data
                         : {
-                              co: value.data.co,
-                              route: value.data.route,
-                              orig_tc: value.data.dest_tc,
-                              orig_en: value.data.dest_en,
-                              orig_sc: value.data.dest_sc,
-                              dest_tc: value.data.orig_tc,
-                              dest_en: value.data.orig_en,
-                              dest_sc: value.data.orig_sc,
-                              data_timestamp: value.data.data_timestamp,
-                          };
+                            co: value.data.co,
+                            route: value.data.route,
+                            orig_tc: value.data.dest_tc,
+                            orig_en: value.data.dest_en,
+                            orig_sc: value.data.dest_sc,
+                            dest_tc: value.data.orig_tc,
+                            dest_en: value.data.orig_en,
+                            dest_sc: value.data.orig_sc,
+                            data_timestamp: value.data.data_timestamp,
+                            routeId: value.data.route + "|" + dir,
+                        };
             }
         }
 
         return res;
     },
 
-    async getRouteStops(route, dir, serviceType) {
-        let res = [];
+    async getRouteStops(route: string, dir: string, serviceType: string): Promise<StopInfo[]> {
+        let res: StopInfo[] = [];
         const promises = [];
-        const allStops = this.getStops();
+        const allStops = this.getStops!();
 
         // run in parallel
         for (const companyId of COMPANY_IDS) {
@@ -196,9 +127,9 @@ const etaCtbNwfb = {
         for (const value of values) {
             const routeStops = value.data;
             res.push(
-                ...routeStops.map((s) => {
-                    const stopName = allStops.find(
-                        (stop) => stop.stop === s.stop
+                ...routeStops.map((s: Record<string, string>) => {
+                    const stopName = (allStops as StopInfo[]).find(
+                        (stop: StopInfo) => stop.stop === s.stop
                     );
                     return {
                         ...s,
@@ -213,7 +144,7 @@ const etaCtbNwfb = {
         return res;
     },
 
-    async getStop(busStop) {
+    async getStop(busStop: string): Promise<StopInfo | null> {
         let res = null;
         const url = `https://rt.data.gov.hk/v1.1/transport/citybus-nwfb/stop/${busStop}`;
 
@@ -229,7 +160,7 @@ const etaCtbNwfb = {
         return res;
     },
 
-    async getEtas(busStop, route, dir, serviceType, lang) {
+    async getEtas(busStop: string, route: string, dir: string, serviceType: string, lang: string): Promise<EtaInfo[]> {
         let res = [];
         let promises = [];
 
@@ -255,7 +186,7 @@ const etaCtbNwfb = {
             const etas = value.data;
             res.push(
                 ...etas.filter(
-                    (o) =>
+                    (o: EtaInfo) =>
                         o.route === route &&
                         dir.toUpperCase().startsWith(o.dir.toUpperCase()) &&
                         !!o.eta
@@ -266,19 +197,9 @@ const etaCtbNwfb = {
         return res;
     },
 
-    async getEtaDisplay(busStop, route, dir, serviceType, lang) {
+    async getEtaDisplay(busStop: string, route: string, dir: string, serviceType: string, lang: string): Promise<EtaInfo[]> {
         const etas = await this.getEtas(busStop, route, dir, serviceType, lang);
-        for (const eta of etas) {
-            // format the eta time
-            if (eta.eta) {
-                eta.etaStr = moment(eta.eta).format("H:mm:ss");
-                const minutesDiff = moment(eta.eta).diff(moment(), "m");
-                eta.fromNow =
-                    minutesDiff > 1 ? minutesDiff + " mins" : "less than 1 min";
-            }
-        }
-
-        return etas;
+        return formatEtaDisplay(etas);
     },
 };
 

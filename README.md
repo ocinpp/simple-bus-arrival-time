@@ -25,14 +25,22 @@ The project makes use of 4 APIs from [Real-time “Next Bus” arrival time and 
 
 ### New Lantao Bus Company (1973) Limited
 
-The project makes use of 3 APIs from [Bus service of New Lantao Bus Company (1973) Limited (Second generation)](https://data.gov.hk/en-data/dataset/nlb-bus-nlb-bus-service-v2
-) to get the estimated arrival time for a specific bus route at a particular bus stop.
+The project makes use of 3 APIs from [Bus service of New Lantao Bus Company (1973) Limited (Second generation)](https://data.gov.hk/en-data/dataset/nlb-bus-nlb-bus-service-v2) to get the estimated arrival time for a specific bus route at a particular bus stop.
 
 - [Get list of all routes](https://www.nlb.com.hk/datagovhk/BusServiceOpenAPIDocumentation2.0.pdf)
 - [Get list of stops of a route](https://www.nlb.com.hk/datagovhk/BusServiceOpenAPIDocumentation2.0.pdf)
 - [Get estimated arrivals of a stop of a route](https://www.nlb.com.hk/datagovhk/BusServiceOpenAPIDocumentation2.0.pdf)
 
-It also makes use of a static js file (`nlb.js`) that contains all the bus stops.
+It also makes use of a static TypeScript file (`nlb.ts`) that contains all the bus stops.
+
+## Tech Stack
+
+- **Vue 3** with Composition API (`<script setup>`)
+- **TypeScript**
+- **Vite 7** as the build tool
+- **Tailwind CSS v4** (via `@tailwindcss/vite` plugin)
+- **dayjs** for date/time formatting
+- **ESLint 10** with `typescript-eslint` and `eslint-plugin-vue`
 
 ## Build Setup
 
@@ -43,7 +51,10 @@ $ npm install
 # serve with hot reload at localhost
 $ npm run dev
 
-# build for production and launch server
+# type check
+$ npm run type-check
+
+# build for production (includes type check)
 $ npm run build
 
 # preview
@@ -53,30 +64,12 @@ $ npm run preview
 $ npm run lint
 ```
 
-## Vue 3 + Vite
+## Recommended IDE Setup
 
-For Vue 3, this project will be using **Options API**.
-
-### Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+- [VS Code](https://code.visualstudio.com/) + [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur)
 - ESLint
 - [ESLint plugin for Vue.js](https://eslint.vuejs.org/)
-- Prettier
-
-The default `vue` formatter may need to be changed to `sbenp.prettier-vscode` in VSCode's `settings.json` so that **Prettier** is used for formatting.
-
-```json
-"[vue]": {
-  // "editor.defaultFormatter": "Vue.volar"
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
-},
-```
 
 ## Tailwind CSS
 
-This project is using Tailwind CSS for styling.
-
-### Recommended Setup
-
-- [https://tailwindcss.com/docs/guides/vite](https://tailwindcss.com/docs/guides/vite)
+This project uses Tailwind CSS v4 for styling, integrated via the `@tailwindcss/vite` plugin.

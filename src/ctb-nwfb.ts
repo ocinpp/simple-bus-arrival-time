@@ -1,4 +1,6 @@
-export const CTB_NWFB_STOPS = [
+import type { CtbNwfbStop } from "./types";
+
+export const CTB_NWFB_STOPS: Partial<CtbNwfbStop>[] = [
   {
     stop: "001001",
     name_tc: "中央廣場, 亞畢諾道",

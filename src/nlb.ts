@@ -1,4 +1,6 @@
-export const NLB_STOPS = [
+import type { NlbStop } from "./types";
+
+export const NLB_STOPS: NlbStop[] = [
   {
     stopId: "1",
     stopName_c: "梅窩碼頭",
