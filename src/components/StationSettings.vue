@@ -266,7 +266,7 @@ async function getAllStops(
 
 <style scoped>
 .modal {
-    background-color: rgba(255, 255, 255, 0.6);
+    background-color: rgba(0, 0, 0, 0.7);
 }
 
 .dropdown {
