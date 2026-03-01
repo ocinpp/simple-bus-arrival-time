@@ -1,174 +1,148 @@
-<script>
+<script setup lang="ts">
+import { ref, reactive, watch } from "vue";
 import { getEtaByCompany, readSettingsFromStorage } from "../eta";
+import type { CompanyCode, RouteInfo, StopInfo } from "../types";
 
-export default {
-    emits: ["updateSettings"],
-    data() {
-        return {
-            title: "Settings",
-            error: "",
-            modalOpen: false,
-            selected: {
-                company: "",
-                route: "",
-                dir: "",
-                serviceType: "",
-                busStop: "",
-            },
-            routeDirServiceType: "",
-            companyList: [
-                { code: "KMB", name: "Kowloon Motor Bus" },
-                { code: "CTB_NWFB", name: "Citybus / New World First Bus" },
-                { code: "NLB", name: "New Lantao Bus" },
-            ],
-            routeList: [],
-            stopList: [],
-        };
-    },
-    watch: {
-        "selected.company": {
-            immediate: true,
-            handler(newValue, oldValue) {
-                if (newValue) {
-                    // clear all routes and stops
-                    this.routeList = [];
-                    this.stopList = [];
+const emit = defineEmits(["updateSettings"]);
 
-                    // update routes
-                    this.getAllRoutes(newValue);
-                }
+const title = "Settings";
+const error = ref("");
+const modalOpen = ref(false);
+const selected = reactive({
+    company: "",
+    route: "",
+    dir: "",
+    serviceType: "",
+    busStop: "",
+});
+const routeDirServiceType = ref("");
+const companyList = [
+    { code: "KMB", name: "Kowloon Motor Bus" },
+    { code: "CTB_NWFB", name: "Citybus / New World First Bus" },
+    { code: "NLB", name: "New Lantao Bus" },
+];
+const routeList = ref<RouteInfo[]>([]);
+const stopList = ref<StopInfo[]>([]);
 
-                if (oldValue) {
-                    // clear current selected route and bus stop
-                    this.routeDirServiceType = "";
-                    this.selected.route = "";
-                    this.selected.dir = "";
-                    this.selected.serviceType = "";
-                    this.selected.busStop = "";
-                }
-            },
-        },
-        routeDirServiceType: {
-            immediate: true,
-            handler(newValue, oldValue) {
-                if (newValue) {
-                    const arr = newValue.split("|");
-                    this.selected.route = arr[0];
-                    this.selected.dir = arr[1] || "";
-                    this.selected.serviceType = arr[2] || "";
+function joinRouteDirServiceType(
+    route: string,
+    dir: string,
+    serviceType: string
+) {
+    return [route, dir, serviceType].filter(Boolean).join("|");
+}
 
-                    // clear all stops
-                    this.stopList = [];
+watch(
+    () => selected.company,
+    (newValue, oldValue) => {
+        if (newValue) {
+            routeList.value = [];
+            stopList.value = [];
+            getAllRoutes(newValue);
+        }
+        if (oldValue) {
+            routeDirServiceType.value = "";
+            selected.route = "";
+            selected.dir = "";
+            selected.serviceType = "";
+            selected.busStop = "";
+        }
+    }
+);
 
-                    // update stops
-                    this.getAllStops(
-                        this.selected.company,
-                        this.selected.route,
-                        this.selected.dir,
-                        this.selected.serviceType
-                    );
-                }
+watch(routeDirServiceType, (newValue, oldValue) => {
+    if (newValue) {
+        const arr = newValue.split("|");
+        selected.route = arr[0];
+        selected.dir = arr[1] || "";
+        selected.serviceType = arr[2] || "";
 
-                if (oldValue) {
-                    // clear current selected stop
-                    this.selected.busStop = "";
-                }
-            },
-        },
-    },
-    methods: {
-        joinRouteDirServiceType(route, dir, serviceType) {
-            const arr = [];
-            if (route) {
-                arr.push(route);
-            }
-            if (dir) {
-                arr.push(dir);
-            }
-            if (serviceType) {
-                arr.push(serviceType);
-            }
-            return arr.join("|");
-        },
-        saveSettings() {
-            if (
-                this.selected.company === "" ||
-                this.selected.busStop === "" ||
-                this.routeDirServiceType === ""
-            ) {
-                this.error = "Please choose values!";
-                return;
-            } else {
-                this.error = "";
-            }
+        stopList.value = [];
+        getAllStops(
+            selected.company,
+            selected.route,
+            selected.dir,
+            selected.serviceType
+        );
+    }
+    if (oldValue) {
+        selected.busStop = "";
+    }
+});
 
-            const e = {
-                company: this.selected.company,
-                route: this.selected.route,
-                dir: this.selected.dir,
-                serviceType: this.selected.serviceType,
-                busStop: this.selected.busStop,
-            };
+function saveSettings() {
+    if (!selected.company || !selected.busStop || !routeDirServiceType.value) {
+        error.value = "Please choose values!";
+        return;
+    }
+    error.value = "";
 
-            try {
-                // save to local storage
-                localStorage.setItem("settings", JSON.stringify(e));
-            } catch (error) {
-                alert("Cannot persist settings information");
-            }
+    const e = {
+        company: selected.company,
+        route: selected.route,
+        dir: selected.dir,
+        serviceType: selected.serviceType,
+        busStop: selected.busStop,
+    };
 
-            // emit event to parent
-            this.$emit("updateSettings", e);
+    try {
+        localStorage.setItem("settings", JSON.stringify(e));
+    } catch {
+        error.value = "Cannot persist settings information";
+    }
 
-            // close modal
-            this.modalOpen = false;
-        },
-        openSettings() {
-            const settings = readSettingsFromStorage();
+    emit("updateSettings", e);
+    modalOpen.value = false;
+}
 
-            // init from settings
-            this.selected.company = settings?.company || "";
-            this.selected.route = settings?.route || "";
-            this.selected.dir = settings?.dir || "";
-            this.selected.serviceType = settings?.serviceType || "";
-            this.selected.busStop = settings?.busStop || "";
-            this.routeDirServiceType = this.joinRouteDirServiceType(
-                settings?.route || "",
-                settings?.dir || "",
-                settings?.serviceType || ""
-            );
+function openSettings() {
+    const settings = readSettingsFromStorage();
 
-            this.modalOpen = true;
-        },
-        closeSettings() {
-            this.error = "";
-            this.modalOpen = false;
-        },
-        async getAllRoutes(company) {
-            let routes = [];
-            try {
-                routes = await getEtaByCompany(company).getRoutes();
-            } catch (error) {
-                console.log("Cannot get all routes");
-            }
-            this.routeList = routes;
-        },
-        async getAllStops(company, route, dir, serviceType) {
-            let routeStops = [];
-            try {
-                routeStops = await getEtaByCompany(company).getRouteStops(
-                    route,
-                    dir,
-                    serviceType
-                );
-            } catch (error) {
-                console.log(error);
-                console.log("Cannot get all stops in the route");
-            }
-            this.stopList = routeStops;
-        },
-    },
-};
+    selected.company = settings?.company || "";
+    selected.route = settings?.route || "";
+    selected.dir = settings?.dir || "";
+    selected.serviceType = settings?.serviceType || "";
+    selected.busStop = settings?.busStop || "";
+    routeDirServiceType.value = joinRouteDirServiceType(
+        settings?.route || "",
+        settings?.dir || "",
+        settings?.serviceType || ""
+    );
+
+    modalOpen.value = true;
+}
+
+function closeSettings() {
+    error.value = "";
+    modalOpen.value = false;
+}
+
+async function getAllRoutes(company: string) {
+    let routes: RouteInfo[] = [];
+    try {
+        routes = await getEtaByCompany(company as CompanyCode).getRoutes();
+    } catch {
+        console.error("Cannot get all routes");
+    }
+    routeList.value = routes;
+}
+
+async function getAllStops(
+    company: string,
+    route: string,
+    dir: string,
+    serviceType: string
+) {
+    let routeStops: StopInfo[] = [];
+    try {
+        routeStops = await getEtaByCompany(
+            company as CompanyCode
+        ).getRouteStops(route, dir, serviceType);
+    } catch (err) {
+        console.error("Cannot get all stops in the route", err);
+    }
+    stopList.value = routeStops;
+}
 </script>
 
 <template>
@@ -208,7 +182,6 @@ export default {
                                     v-model="selected.company"
                                     name="company"
                                     class="dropdown"
-                                    style="color: var(--color-bg)"
                                 >
                                     <option value>Please choose</option>
                                     <option
@@ -231,7 +204,6 @@ export default {
                                     v-model="routeDirServiceType"
                                     name="routeDirServiceType"
                                     class="dropdown"
-                                    style="color: var(--color-bg)"
                                 >
                                     <option value>Please choose</option>
                                     <option
@@ -250,7 +222,6 @@ export default {
                                     v-model="selected.busStop"
                                     name="busStop"
                                     class="dropdown"
-                                    style="color: var(--color-bg)"
                                 >
                                     <option value>Please choose</option>
                                     <option
@@ -300,5 +271,11 @@ export default {
 
 .dropdown {
     max-width: 100%;
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #f0f0f0;
+    color: #000000;
+    border: 1px solid #00ffaa;
+    border-radius: 0.25rem;
 }
 </style>

@@ -1,136 +1,124 @@
-<script>
+<script setup lang="ts">
+import { ref, reactive, onMounted, onUnmounted } from "vue";
 import { getEtaByCompany, readSettingsFromStorage } from "./eta";
+import type {
+    Settings,
+    EtaInfo,
+    RouteInfo,
+    StopInfo,
+    CompanyCode,
+} from "./types";
 import StationSettings from "./components/StationSettings.vue";
 
-const app = {
-    components: {
-        StationSettings,
-    },
-    data() {
-        return {
-            now: new Date().toLocaleString(),
-            isLoading: false,
-            res: {
-                route: null,
-                busStop: null,
-                etas: [],
-            },
-            lang: "en",
-            check: {
-                company: "",
-                busStop: "",
-                route: "",
-                dir: "",
-                serviceType: "",
-            },
-            widthVariants: {
-                1: "md:w-full",
-                2: "md:w-1/2",
-                3: "md:w-1/3",
-                4: "md:w-1/4",
-                5: "md:w-1/5",
-                6: "md:w-1/6",
-            },
-        };
-    },
-    methods: {
-        readSettings() {
-            const settings = readSettingsFromStorage();
-            if (settings) {
-                this.check.company = settings.company;
-                this.check.busStop = settings.busStop;
-                this.check.route = settings.route;
-                this.check.dir = settings.dir;
-                this.check.serviceType = settings.serviceType;
-            }
-        },
-        async updateSettings(setting) {
-            console.log("Settings saved");
-
-            // update dashboard data
-            this.check.company = setting.company;
-            this.check.busStop = setting.busStop;
-            this.check.route = setting.route;
-            this.check.dir = setting.dir;
-            this.check.serviceType = setting.serviceType;
-
-            // refresh data
-            await this.updateRouteStopInfo();
-            await this.updateAll();
-        },
-        async getRouteBusStopEta(
-            company,
-            busStop,
-            route,
-            dir,
-            serviceType,
-            lang
-        ) {
-            const etas = await getEtaByCompany(company).getEtaDisplay(
-                busStop,
-                route,
-                dir,
-                serviceType,
-                lang
-            );
-
-            return etas;
-        },
-        async updateRouteStopInfo() {
-            if (this.check.company) {
-                this.res.route = await getEtaByCompany(
-                    this.check.company
-                ).getRoute(
-                    this.check.route,
-                    this.check.dir,
-                    this.check.serviceType
-                );
-                this.res.busStop = await getEtaByCompany(
-                    this.check.company
-                ).getStop(this.check.busStop);
-            }
-        },
-        async updateAll() {
-            const allEtas = [];
-
-            if (this.check.company && this.check.route && this.check.busStop) {
-                this.now = new Date().toLocaleTimeString();
-                this.isLoading = true;
-
-                try {
-                    const etas = await this.getRouteBusStopEta(
-                        this.check.company,
-                        this.check.busStop,
-                        this.check.route,
-                        this.check.dir,
-                        this.check.serviceType,
-                        this.lang
-                    );
-                    allEtas.push(...etas);
-                } catch (error) {
-                    console.log(error);
-                }
-
-                this.res.etas = allEtas;
-            }
-
-            this.isLoading = false;
-        },
-    },
-    created: async function () {
-        this.readSettings();
-        await this.updateRouteStopInfo();
-    },
-    mounted: async function () {
-        await this.updateRouteStopInfo();
-        await this.updateAll();
-        setInterval(async () => {
-            await this.updateAll();
-        }, 30000);
-    },
+const now = ref(new Date().toLocaleString());
+const isLoading = ref(false);
+const res = reactive<{
+    route: RouteInfo | null;
+    busStop: StopInfo | null;
+    etas: EtaInfo[];
+}>({
+    route: null,
+    busStop: null,
+    etas: [],
+});
+const lang = "en";
+const check = reactive({
+    company: "",
+    busStop: "",
+    route: "",
+    dir: "",
+    serviceType: "",
+});
+const widthVariants: Record<number, string> = {
+    1: "md:w-full",
+    2: "md:w-1/2",
+    3: "md:w-1/3",
+    4: "md:w-1/4",
+    5: "md:w-1/5",
+    6: "md:w-1/6",
 };
 
-export default app;
+function readSettings() {
+    const settings = readSettingsFromStorage();
+    if (settings) {
+        check.company = settings.company;
+        check.busStop = settings.busStop;
+        check.route = settings.route;
+        check.dir = settings.dir;
+        check.serviceType = settings.serviceType;
+    }
+}
+
+async function updateRouteStopInfo() {
+    if (check.company) {
+        const api = getEtaByCompany(check.company as CompanyCode);
+        res.route = await api.getRoute(
+            check.route,
+            check.dir,
+            check.serviceType
+        );
+        const stop = await api.getStop(check.busStop);
+        res.busStop = Array.isArray(stop) ? (stop[0] ?? null) : stop;
+    }
+}
+
+async function updateAll() {
+    const allEtas = [];
+
+    if (check.company && check.route && check.busStop) {
+        now.value = new Date().toLocaleTimeString();
+        isLoading.value = true;
+
+        try {
+            const etas = await getEtaByCompany(
+                check.company as CompanyCode
+            ).getEtaDisplay(
+                check.busStop,
+                check.route,
+                check.dir,
+                check.serviceType,
+                lang
+            );
+            allEtas.push(...etas);
+        } catch (error) {
+            console.error(error);
+        }
+
+        res.etas = allEtas;
+    }
+
+    isLoading.value = false;
+}
+
+async function updateSettings(setting: Settings) {
+    check.company = setting.company;
+    check.busStop = setting.busStop;
+    check.route = setting.route;
+    check.dir = setting.dir;
+    check.serviceType = setting.serviceType;
+
+    await updateRouteStopInfo();
+    await updateAll();
+}
+
+let intervalId: ReturnType<typeof setInterval> | null = null;
+
+readSettings();
+updateRouteStopInfo();
+
+onMounted(async () => {
+    await updateRouteStopInfo();
+    await updateAll();
+    intervalId = setInterval(() => {
+        updateAll();
+    }, 30000);
+});
+
+onUnmounted(() => {
+    if (intervalId) {
+        clearInterval(intervalId);
+    }
+});
 </script>
 
 <template>
